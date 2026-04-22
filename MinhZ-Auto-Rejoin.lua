@@ -7,11 +7,10 @@
             ║   ██║╚██╔╝██║██║██║╚██╗██║██╔══██║ ███╔╝     ║
             ║   ██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗   ║
             ║   ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝   ║
-            ║          MinhZ Hub Auto Rejoin | Made By MinhZ                 ║
+            ║     MinhZ Hub Auto Rejoin | Made By MinhZ    ║
             ║                                              ║
             ╚══════════════════════════════════════════════╝
-
-            Note: This Is Make By MinhZ
+                       Note: This Is Make By MinhZ
 ]]--
 
 local timeToRejoin = tonumber(getgenv().TIME_REJOIN) or 60
