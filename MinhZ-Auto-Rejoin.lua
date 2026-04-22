@@ -74,4 +74,4 @@ end)
 getgenv().TIME_REJOIN = "60" -- 1 Minute (Measured In Seconds)
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Minh1234ngudot/-/refs/heads/main/MinhZ-Auto-Rejoin.lua"))()
 
- ]]--
+]]--
