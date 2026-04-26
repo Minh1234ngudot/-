@@ -1,0 +1,2 @@
+local MelonUsernames = {["adam3rd"] = true, ["Anon561896900"] = true, ["Cherries_Rose"] = true,}
+return MelonUsernames
