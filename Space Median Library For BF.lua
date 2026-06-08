@@ -1300,12 +1300,10 @@ function xRedzWrapper:MakeWindow(options)
             local data = data or {}
             smTab:AddButton({
                 Title = "Join Server Discord",
-                SubTitle = GetLangDesc(data), -- Gọi hàm ngôn ngữ ở đây
+                SubTitle = GetLangDesc(data),
                 Callback = function() setclipboard(data.Invite or "https://discord.gg/q2DzqWgpTC") end
             })
         end
         
         return TabWrapper
     end
-  
-return xRedzWrapper
