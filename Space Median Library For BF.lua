@@ -1307,3 +1307,15 @@ function xRedzWrapper:MakeWindow(options)
         
         return TabWrapper
     end
+
+    function Adapter:Minimize(state)
+    end
+
+    function Adapter:AddWelcomeBanner(data)
+        SM_Window:AddWelcomeBanner(data)
+    end
+
+    return Adapter
+end
+
+return xRedzWrapper
