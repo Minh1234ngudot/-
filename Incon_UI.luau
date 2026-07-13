@@ -99,7 +99,7 @@ end
 
 function InconUI:CreateWindow(Options)
     Options = Options or {}
-    local TitleText = Options.Name or "Incon UI Hub"
+    local TitleText = Options.Name or "Incon UI Library"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
     local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0 }
