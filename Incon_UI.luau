@@ -3,6 +3,7 @@ local TS = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local Players = game:GetService("Players")
+local TSvc = game:GetService("TextService")
 local LP = Players.LocalPlayer
 local InconFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
@@ -58,9 +59,19 @@ function InconUI:CreateWindow(Options)
     TopLabel.ZIndex = 6
     TopLabel.Parent = TopBar
 
-    local dragToggle, dragStart, startPos
+    local dragToggle = nil
+    local dragSpeed = 0.25
+    local dragStart = nil
+    local startPos = nil
+
+    local function updateInput(input)
+        local delta = input.Position - dragStart
+        local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        TS:Create(MainFrame, TweenInfo.new(dragSpeed), {Position = position}):Play()
+    end
+
     TopBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
             dragToggle = true
             dragStart = input.Position
             startPos = MainFrame.Position
@@ -75,10 +86,7 @@ function InconUI:CreateWindow(Options)
     UIS.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if dragToggle then
-                local delta = input.Position - dragStart
-                local newX = math.round(startPos.X.Offset + delta.X)
-                local newY = math.round(startPos.Y.Offset + delta.Y)
-                MainFrame.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+                updateInput(input)
             end
         end
     end)
@@ -92,7 +100,7 @@ function InconUI:CreateWindow(Options)
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
     SideBarMask.Size = UDim2.new(0, 110, 1, 2)
-    SideBarMask.Position = UDim2.new(0, -110, 0, -1)
+    SideBarMask.Position = UDim2.new(0, -111, 0, -1)
     SideBarMask.BorderSizePixel = 0
     SideBarMask.BackgroundTransparency = 1
     SideBarMask.ClipsDescendants = true
@@ -108,6 +116,14 @@ function InconUI:CreateWindow(Options)
     SideBar.BorderSizePixel = 1
     SideBar.ZIndex = 12
     SideBar.Parent = SideBarMask
+
+    local Divider = Instance.new("Frame")
+    Divider.Size = UDim2.new(0, 1, 1, 0)
+    Divider.Position = UDim2.new(1, -1, 0, 0)
+    Divider.BackgroundColor3 = Color3.fromRGB(56, 56, 56)
+    Divider.BorderSizePixel = 0
+    Divider.ZIndex = 14
+    Divider.Parent = SideBar
 
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Name = "ToggleArrow"
@@ -462,6 +478,157 @@ function InconUI:CreateWindow(Options)
                     if Options.Callback then Options.Callback(v) end
                     toggleDrop()
                 end)
+            end
+        end
+
+        function Tab:CreateUpdateLog(entry)
+            local COL = {
+                card   = Color3.fromRGB(25, 25, 25),
+                stroke = Color3.fromRGB(50, 50, 50),
+                ver    = Color3.fromRGB(220, 220, 220),
+                add    = Color3.fromRGB(100, 255, 100),
+                change = Color3.fromRGB(255, 210, 90),
+                remove = Color3.fromRGB(255, 90, 90),
+                text   = Color3.fromRGB(200, 200, 200),
+                hint   = Color3.fromRGB(120, 180, 255),
+            }
+            local KIND_COL = { ["+"] = COL.add, ["~"] = COL.change, ["-"] = COL.remove }
+            local HEADER_H = 18
+            local LINE_H = 16
+            local LINE_GAP = 3
+            local PAD_V = 6
+            local HINT_H = 14
+            local IS_TOUCH = UIS.TouchEnabled and not UIS.MouseEnabled
+
+            local function measureText(text, availW)
+                return TSvc:GetTextSize(text, 11, Enum.Font.Code, Vector2.new(availW, math.huge))
+            end
+
+            local function cardHeight(sumLines, n, canExpand)
+                local h = PAD_V + HEADER_H + LINE_GAP + sumLines + math.max(0, n - 1) * LINE_GAP + PAD_V
+                if canExpand then h = h + HINT_H end
+                return h
+            end
+
+            local n = #entry.changes
+            local canExpand = entry.expandable == true
+            local collapsedH = cardHeight(n * LINE_H, n, canExpand)
+
+            local card = Instance.new("TextButton")
+            card.Size = UDim2.new(1, -6, 0, collapsedH)
+            card.BackgroundColor3 = COL.card
+            card.BorderSizePixel = 1
+            card.BorderColor3 = COL.stroke
+            card.AutoButtonColor = false
+            card.Text = ""
+            card.Active = canExpand
+            card.Selectable = canExpand
+            card.ClipsDescendants = true
+            card.ZIndex = 6
+            card.Parent = TabPage
+
+            local content = Instance.new("Frame")
+            content.Size = UDim2.new(1, 0, 1, 0)
+            content.BackgroundTransparency = 1
+            content.ZIndex = 7
+            content.Parent = card
+
+            local cpad = Instance.new("UIPadding")
+            cpad.PaddingTop = UDim.new(0, PAD_V)
+            cpad.PaddingBottom = UDim.new(0, PAD_V)
+            cpad.PaddingLeft = UDim.new(0, 8)
+            cpad.PaddingRight = UDim.new(0, 8)
+            cpad.Parent = content
+
+            local clist = Instance.new("UIListLayout")
+            clist.Padding = UDim.new(0, LINE_GAP)
+            clist.SortOrder = Enum.SortOrder.LayoutOrder
+            clist.Parent = content
+
+            local header = Instance.new("TextLabel")
+            header.BackgroundTransparency = 1
+            header.Size = UDim2.new(1, 0, 0, HEADER_H)
+            header.Font = Enum.Font.Code
+            header.RichText = true
+            header.Text = string.format('<b>%s</b>  <font color="rgb(120,120,120)">%s</font>', entry.ver, entry.date)
+            header.TextColor3 = COL.ver
+            header.TextSize = 13
+            header.TextXAlignment = Enum.TextXAlignment.Left
+            header.LayoutOrder = 0
+            header.ZIndex = 8
+            header.Parent = content
+
+            local lines = {}
+            for i, ch in ipairs(entry.changes) do
+                local kind, desc = ch[1], ch[2]
+                local lbl = Instance.new("TextLabel")
+                lbl.BackgroundTransparency = 1
+                lbl.Size = UDim2.new(1, 0, 0, LINE_H)
+                lbl.Font = Enum.Font.Code
+                lbl.Text = string.format("[%s] %s", kind, desc)
+                lbl.TextColor3 = KIND_COL[kind] or COL.text
+                lbl.TextSize = 11
+                lbl.TextXAlignment = Enum.TextXAlignment.Left
+                lbl.TextYAlignment = Enum.TextYAlignment.Top
+                lbl.TextTruncate = Enum.TextTruncate.AtEnd
+                lbl.LayoutOrder = i
+                lbl.ZIndex = 8
+                lbl.Parent = content
+                lines[i] = lbl
+            end
+
+            if canExpand then
+                local hint = Instance.new("TextLabel")
+                hint.AnchorPoint = Vector2.new(1, 1)
+                hint.Position = UDim2.new(1, -8, 1, -5)
+                hint.Size = UDim2.new(0, 150, 0, HINT_H)
+                hint.BackgroundTransparency = 1
+                hint.Font = Enum.Font.Code
+                hint.Text = "▼ Click to expand"
+                hint.TextColor3 = COL.hint
+                hint.TextSize = 10
+                hint.TextXAlignment = Enum.TextXAlignment.Right
+                hint.TextTransparency = IS_TOUCH and 0.4 or 1
+                hint.ZIndex = 9
+                hint.Parent = card
+
+                local expanded = false
+                local fadeIn = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+                if not IS_TOUCH then
+                    card.MouseEnter:Connect(function()
+                        TS:Create(hint, fadeIn, {TextTransparency = 0}):Play()
+                    end)
+                    card.MouseLeave:Connect(function()
+                        TS:Create(hint, fadeIn, {TextTransparency = 1}):Play()
+                    end)
+                end
+
+                local function toggleExpand()
+                    expanded = not expanded
+                    local availW = math.max(50, card.AbsoluteSize.X - 16)
+                    local sumLines = 0
+                    for _, lbl in ipairs(lines) do
+                        if expanded then
+                            lbl.TextTruncate = Enum.TextTruncate.None
+                            lbl.TextWrapped = true
+                            local b = measureText(lbl.Text, availW)
+                            local h = math.max(LINE_H, math.ceil(b.Y) + 2)
+                            lbl.Size = UDim2.new(1, 0, 0, h)
+                            sumLines = sumLines + h
+                        else
+                            lbl.TextWrapped = false
+                            lbl.TextTruncate = Enum.TextTruncate.AtEnd
+                            lbl.Size = UDim2.new(1, 0, 0, LINE_H)
+                            sumLines = sumLines + LINE_H
+                        end
+                    end
+                    local goal = UDim2.new(1, -6, 0, cardHeight(sumLines, #lines, true))
+                    TS:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = goal}):Play()
+                    hint.Text = expanded and "▲ Click to collapse" or "▼ Click to expand"
+                end
+
+                card.MouseButton1Click:Connect(toggleExpand)
             end
         end
 
