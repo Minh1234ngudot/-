@@ -1,4 +1,4 @@
-local MinhZLib = {}
+local InconUI = {}
 
 local TS = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
@@ -8,9 +8,9 @@ local LP = Players.LocalPlayer
 
 local MinhZFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
-function MinhZLib:CreateWindow(Options)
+function InconUI:CreateWindow(Options)
     Options = Options or {}
-    local TitleText = Options.Name or "MinhZ Troll GUI"
+    local TitleText = Options.Name or "Incon UI Hub"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
 
@@ -27,11 +27,11 @@ function MinhZLib:CreateWindow(Options)
     if not ParentUI then ParentUI = LP:WaitForChild("PlayerGui") end
 
     for _, gui in ipairs(ParentUI:GetChildren()) do
-        if gui.Name == "MinhZTrollGUI_Hub" then gui:Destroy() end
+        if gui.Name == "InconUI_Hub" then gui:Destroy() end
     end
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "MinhZTrollGUI_Hub"
+    ScreenGui.Name = "InconUI_Hub"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = ParentUI
 
@@ -89,7 +89,6 @@ function MinhZLib:CreateWindow(Options)
         end
     end)
 
-    -- FIX: Bù 2 pixel chiều cao và lùi 1 pixel để căn chuẩn 100% với cái viền của MainFrame
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
     SideBarMask.Size = UDim2.new(0, 110, 1, 2) 
@@ -101,7 +100,7 @@ function MinhZLib:CreateWindow(Options)
     SideBarMask.Parent = MainFrame
 
     local SideBar = Instance.new("Frame")
-    SideBar.Name = "MinhZ_Sidebar"
+    SideBar.Name = "InconUI_Sidebar"
     SideBar.Size = UDim2.new(1, 0, 1, 0)
     SideBar.Position = UDim2.new(0, 0, 0, 0)
     SideBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
@@ -154,7 +153,7 @@ function MinhZLib:CreateWindow(Options)
         local hue = tick() % 4 / 4
         local c = Color3.fromHSV(hue, 1, 1)
         local hex = string.format("#%02X%02X%02X", c.R*255, c.G*255, c.B*255)
-        Title.Text = 'Welcome <font color="'..hex..'">'..LP.Name..'</font>\nto\n'..TitleText
+        Title.Text = 'Welcome <font color="'..hex..'">'..LP.Name..'</font>\nto '..TitleText
     end)
 
     local TabContainer = Instance.new("ScrollingFrame")
@@ -281,4 +280,4 @@ function MinhZLib:CreateWindow(Options)
     return Window
 end
 
-return MinhZLib
+return InconUI
