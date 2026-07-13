@@ -19,24 +19,28 @@ function InconUI:MakeNotify(Options)
 
     local NotifyUI = ParentUI:FindFirstChild("InconUI_Notify")
     if not NotifyUI then
-        NotifyUI = Instance.new("ScreenGui")
-        NotifyUI.Name = "InconUI_Notify"
-        NotifyUI.ResetOnSpawn = false
-        NotifyUI.IgnoreGuiInset = true
-        NotifyUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        NotifyUI.Parent = ParentUI
+        local NewNotifyUI = Instance.new("ScreenGui")
+        NewNotifyUI.Name = "InconUI_Notify"
+        NewNotifyUI.ResetOnSpawn = false
+        NewNotifyUI.IgnoreGuiInset = true
+        NewNotifyUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         local Layout = Instance.new("Frame")
         Layout.Name = "Layout"
         Layout.AnchorPoint = Vector2.new(1, 1)
         Layout.Size = UDim2.new(0, 250, 1, -30)
         Layout.Position = UDim2.new(1, -15, 1, -15)
         Layout.BackgroundTransparency = 1
-        Layout.Parent = NotifyUI
+        Layout.Parent = NewNotifyUI
         local UIL = Instance.new("UIListLayout")
         UIL.SortOrder = Enum.SortOrder.LayoutOrder
         UIL.VerticalAlignment = Enum.VerticalAlignment.Bottom
         UIL.Padding = UDim.new(0, 10)
         UIL.Parent = Layout
+        NewNotifyUI.Parent = ParentUI
+        NotifyUI = ParentUI:FindFirstChild("InconUI_Notify") or NewNotifyUI
+        if NotifyUI ~= NewNotifyUI then
+            NewNotifyUI:Destroy()
+        end
     end
 
     local NoteFrame = Instance.new("Frame")
@@ -102,7 +106,7 @@ function InconUI:CreateWindow(Options)
     local TitleText = Options.Name or "Incon UI Library"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
-    local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0 }
+    local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0, Connections = {} }
     local ParentUI = nil
     local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
     if success and coreGui then ParentUI = coreGui end
@@ -210,7 +214,7 @@ function InconUI:CreateWindow(Options)
         TS:Create(MasterFrame, TweenInfo.new(dragSpeed), {Position = position}):Play()
     end
 
-    TopBar.InputBegan:Connect(function(input)
+    table.insert(Window.Connections, TopBar.InputBegan:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
             dragToggle = true
             dragStart = input.Position
@@ -223,7 +227,7 @@ function InconUI:CreateWindow(Options)
                 end
             end)
         end
-    end)
+    end))
 
     local dragCon
     dragCon = UIS.InputChanged:Connect(function(input)
@@ -234,6 +238,7 @@ function InconUI:CreateWindow(Options)
             end
         end
     end)
+    table.insert(Window.Connections, dragCon)
 
     local toggleCon
     toggleCon = UIS.InputBegan:Connect(function(input, gp)
@@ -242,6 +247,7 @@ function InconUI:CreateWindow(Options)
             MasterFrame.Visible = not MasterFrame.Visible
         end
     end)
+    table.insert(Window.Connections, toggleCon)
 
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Name = "ToggleArrow"
@@ -256,11 +262,11 @@ function InconUI:CreateWindow(Options)
     ToggleBtn.Parent = MainBg
 
     local isOpen = true
-    ToggleBtn.MouseButton1Click:Connect(function()
+    table.insert(Window.Connections, ToggleBtn.MouseButton1Click:Connect(function()
         isOpen = not isOpen
         ToggleBtn.Text = isOpen and "<" or ">"
         TS:Create(SideBarContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, isOpen and 0 or -110, 0, 0)}):Play()
-    end)
+    end))
 
     local Logo = Instance.new("ImageLabel")
     Logo.Size = UDim2.new(0, 56, 0, 56)
@@ -286,11 +292,13 @@ function InconUI:CreateWindow(Options)
     local RainbowLoop
     RainbowLoop = RS.RenderStepped:Connect(function()
         if not Title:IsDescendantOf(game) then RainbowLoop:Disconnect() return end
+        if not MasterFrame.Visible then return end
         local hue = os.clock() % 4 / 4
         local c = Color3.fromHSV(hue, 1, 1)
         local hex = string.format("#%02X%02X%02X", c.R*255, c.G*255, c.B*255)
         Title.Text = 'Welcome <font color="'..hex..'">'..LP.Name..'</font>\nto\n'..TitleText
     end)
+    table.insert(Window.Connections, RainbowLoop)
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Size = UDim2.new(1, 0, 1, -125)
@@ -484,6 +492,7 @@ function InconUI:CreateWindow(Options)
             local Min = Options.Min or 0
             local Max = Options.Max or 100
             local Default = Options.Default or Min
+            local CurrentValue = Default
 
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 40)
@@ -561,6 +570,7 @@ function InconUI:CreateWindow(Options)
             local function update(input)
                 local pos = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
                 local value = math.floor(Min + ((Max - Min) * pos))
+                CurrentValue = value
                 TS:Create(SliderFill, TweenInfo.new(0.05), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
                 ValueBox.Text = tostring(value)
                 if Options.Callback then Options.Callback(value) end
@@ -593,12 +603,13 @@ function InconUI:CreateWindow(Options)
                 local num = tonumber(ValueBox.Text)
                 if num then
                     num = math.clamp(math.floor(num), Min, Max)
+                    CurrentValue = num
                     local pos = (num - Min) / (Max - Min)
                     TS:Create(SliderFill, TweenInfo.new(0.2), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
                     ValueBox.Text = tostring(num)
                     if Options.Callback then Options.Callback(num) end
                 else
-                    ValueBox.Text = tostring(math.floor(Min + ((Max - Min) * SliderFill.Size.X.Scale)))
+                    ValueBox.Text = tostring(CurrentValue)
                 end
             end)
         end
@@ -683,9 +694,19 @@ function InconUI:CreateWindow(Options)
             BindBtn.Parent = BindContainer
             Instance.new("UICorner", BindBtn).CornerRadius = UDim.new(0, 3)
 
+            local waitToken = 0
+
             BindBtn.MouseButton1Click:Connect(function()
                 Waiting = true
                 BindBtn.Text = "..."
+                waitToken = waitToken + 1
+                local myToken = waitToken
+                task.delay(5, function()
+                    if Waiting and waitToken == myToken then
+                        Waiting = false
+                        BindBtn.Text = Key.Name
+                    end
+                end)
             end)
 
             local kbCon
@@ -1038,6 +1059,18 @@ function InconUI:CreateWindow(Options)
         end
 
         return Tab
+    end
+
+    function Window:Destroy()
+        for _, con in ipairs(Window.Connections) do
+            pcall(function() con:Disconnect() end)
+        end
+        Window.Connections = {}
+        Window.Pages = {}
+        Window.CurrentPage = nil
+        if ScreenGui and ScreenGui.Parent then
+            ScreenGui:Destroy()
+        end
     end
 
     return Window
