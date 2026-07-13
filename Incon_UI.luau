@@ -76,7 +76,9 @@ function InconUI:CreateWindow(Options)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if dragToggle then
                 local delta = input.Position - dragStart
-                MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                local newX = math.round(startPos.X.Offset + delta.X)
+                local newY = math.round(startPos.Y.Offset + delta.Y)
+                MainFrame.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
             end
         end
     end)
@@ -90,7 +92,7 @@ function InconUI:CreateWindow(Options)
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
     SideBarMask.Size = UDim2.new(0, 110, 1, 2)
-    SideBarMask.Position = UDim2.new(0, -111, 0, -1)
+    SideBarMask.Position = UDim2.new(0, -110, 0, -1)
     SideBarMask.BorderSizePixel = 0
     SideBarMask.BackgroundTransparency = 1
     SideBarMask.ClipsDescendants = true
