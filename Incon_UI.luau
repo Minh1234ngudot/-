@@ -61,26 +61,26 @@ function InconUI:CreateWindow(Options)
     TopLabel.ZIndex = 6
     TopLabel.Parent = TopBar
 
-    local dragging, dragInput, dragStart, startPos
+    local dragToggle, dragStart, startPos
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
+            dragToggle = true
             dragStart = input.Position
             startPos = MainFrame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragToggle = false
+                end
             end)
         end
     end)
-    TopBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
+
     UIS.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if dragToggle then
+                local delta = input.Position - dragStart
+                MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
         end
     end)
 
@@ -92,8 +92,8 @@ function InconUI:CreateWindow(Options)
 
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
-    SideBarMask.Size = UDim2.new(0, 110, 1, 2) 
-    SideBarMask.Position = UDim2.new(0, -111, 0, -1) 
+    SideBarMask.Size = UDim2.new(0, 110, 1, 0) 
+    SideBarMask.Position = UDim2.new(0, -110, 0, 0) 
     SideBarMask.BorderSizePixel = 0
     SideBarMask.BackgroundTransparency = 1
     SideBarMask.ClipsDescendants = true 
@@ -105,7 +105,7 @@ function InconUI:CreateWindow(Options)
     SideBar.Size = UDim2.new(1, 0, 1, 0)
     SideBar.Position = UDim2.new(0, 0, 0, 0)
     SideBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    SideBar.BorderColor3 = Color3.fromRGB(55, 55, 55)
+    SideBar.BorderColor3 = Color3.fromRGB(56, 56, 56)
     SideBar.BorderSizePixel = 1
     SideBar.ZIndex = 12
     SideBar.Parent = SideBarMask
@@ -392,19 +392,25 @@ function InconUI:CreateWindow(Options)
             local List = Options.List or {}
             local isOpen = false
 
+            local DropContainer = Instance.new("Frame")
+            DropContainer.Size = UDim2.new(1, 0, 0, 30)
+            DropContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            DropContainer.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            DropContainer.ClipsDescendants = true
+            DropContainer.ZIndex = 6
+            DropContainer.Parent = TabPage
+
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 30)
-            Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
-            Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Btn.BackgroundTransparency = 1
             Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
             Btn.Text = "   " .. (Options.Name or "Dropdown")
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.FontFace = InconFont
             Btn.TextSize = 12
             Btn.AutoButtonColor = false
-            Btn.ClipsDescendants = true
-            Btn.ZIndex = 6
-            Btn.Parent = TabPage
+            Btn.ZIndex = 7
+            Btn.Parent = DropContainer
 
             local Icon = Instance.new("TextLabel")
             Icon.Size = UDim2.new(0, 20, 0, 30)
@@ -414,19 +420,19 @@ function InconUI:CreateWindow(Options)
             Icon.Text = "V"
             Icon.FontFace = InconFont
             Icon.TextSize = 12
-            Icon.ZIndex = 7
+            Icon.ZIndex = 8
             Icon.Parent = Btn
 
             local DropList = Instance.new("ScrollingFrame")
             DropList.Size = UDim2.new(1, 0, 1, -30)
             DropList.Position = UDim2.new(0, 0, 0, 30)
-            DropList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            DropList.BackgroundTransparency = 1
             DropList.BorderSizePixel = 0
             DropList.ScrollBarThickness = 2
             DropList.ScrollBarImageColor3 = Color3.fromRGB(71, 71, 71)
             DropList.CanvasSize = UDim2.new(0, 0, 0, #List * 25)
             DropList.ZIndex = 7
-            DropList.Parent = Btn
+            DropList.Parent = DropContainer
 
             local ListLayout = Instance.new("UIListLayout", DropList)
             ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -435,7 +441,7 @@ function InconUI:CreateWindow(Options)
                 isOpen = not isOpen
                 Icon.Text = isOpen and "^" or "V"
                 local targetHeight = isOpen and (30 + math.min(#List * 25, 120)) or 30
-                TS:Create(Btn, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
+                TS:Create(DropContainer, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
             end
 
             Btn.MouseButton1Click:Connect(toggleDrop)
@@ -444,7 +450,7 @@ function InconUI:CreateWindow(Options)
                 local Item = Instance.new("TextButton")
                 Item.Size = UDim2.new(1, 0, 0, 25)
                 Item.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                Item.BorderColor3 = Color3.fromRGB(51, 51, 51)
+                Item.BorderSizePixel = 0
                 Item.TextColor3 = Color3.fromRGB(180, 180, 180)
                 Item.Text = "      " .. v
                 Item.TextXAlignment = Enum.TextXAlignment.Left
