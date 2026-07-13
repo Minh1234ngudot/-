@@ -1,11 +1,9 @@
 local InconUI = {}
-
 local TS = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
-
 local MinhZFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
 function InconUI:CreateWindow(Options)
@@ -13,28 +11,19 @@ function InconUI:CreateWindow(Options)
     local TitleText = Options.Name or "Incon UI Hub"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
-
-    local Window = { 
-        CurrentPage = nil, 
-        Pages = {},
-        TabIndex = 0 
-    }
-
+    local Window = {CurrentPage = nil, Pages = {}, TabIndex = 0}
     local ParentUI = nil
     local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
     if success and coreGui then ParentUI = coreGui end
     if type(gethui) == "function" then ParentUI = gethui() end
     if not ParentUI then ParentUI = LP:WaitForChild("PlayerGui") end
-
     for _, gui in ipairs(ParentUI:GetChildren()) do
         if gui.Name == "InconUI_Hub" then gui:Destroy() end
     end
-
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "InconUI_Hub"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = ParentUI
-
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.BackgroundColor3 = Color3.fromRGB(11, 11, 11)
@@ -44,7 +33,6 @@ function InconUI:CreateWindow(Options)
     MainFrame.ClipsDescendants = false
     MainFrame.ZIndex = 4
     MainFrame.Parent = ScreenGui
-
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
@@ -52,7 +40,6 @@ function InconUI:CreateWindow(Options)
     TopBar.Size = UDim2.new(1, 0, 0, 22)
     TopBar.ZIndex = 5
     TopBar.Parent = MainFrame
-
     local TopLabel = Instance.new("TextLabel")
     TopLabel.Text = string.format("           %s  |  %s Toggle", TitleText, KeyName)
     TopLabel.FontFace = MinhZFont
@@ -64,7 +51,6 @@ function InconUI:CreateWindow(Options)
     TopLabel.Position = UDim2.new(0, 4, 0, 0)
     TopLabel.ZIndex = 6
     TopLabel.Parent = TopBar
-
     local dragging, dragStart, startPos
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -82,13 +68,11 @@ function InconUI:CreateWindow(Options)
             TS:Create(MainFrame, TweenInfo.new(0.25), {Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)}):Play()
         end
     end)
-
     UIS.InputBegan:Connect(function(input, gp)
         if not gp and input.KeyCode == BindKey then
             MainFrame.Visible = not MainFrame.Visible
         end
     end)
-
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
     SideBarMask.Size = UDim2.new(0, 110, 1, 0) 
@@ -98,7 +82,6 @@ function InconUI:CreateWindow(Options)
     SideBarMask.ClipsDescendants = true 
     SideBarMask.ZIndex = 12
     SideBarMask.Parent = MainFrame
-
     local SideBar = Instance.new("Frame")
     SideBar.Name = "InconUI_Sidebar"
     SideBar.Size = UDim2.new(1, 0, 1, 0)
@@ -108,7 +91,6 @@ function InconUI:CreateWindow(Options)
     SideBar.BorderSizePixel = 1
     SideBar.ZIndex = 12
     SideBar.Parent = SideBarMask
-
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Name = "ToggleArrow"
     ToggleBtn.Size = UDim2.new(0, 15, 0, 30)
@@ -120,14 +102,12 @@ function InconUI:CreateWindow(Options)
     ToggleBtn.TextSize = 16
     ToggleBtn.ZIndex = 13
     ToggleBtn.Parent = MainFrame
-
     local isOpen = true
     ToggleBtn.MouseButton1Click:Connect(function()
         isOpen = not isOpen
         ToggleBtn.Text = isOpen and "<" or ">"
         TS:Create(SideBar, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, isOpen and 0 or 110, 0, 0)}):Play()
     end)
-
     local Logo = Instance.new("ImageLabel")
     Logo.Size = UDim2.new(0, 56, 0, 56)
     Logo.Position = UDim2.new(0.5, -28, 0, 12)
@@ -136,7 +116,6 @@ function InconUI:CreateWindow(Options)
     Logo.ZIndex = 13
     Instance.new("UICorner", Logo).CornerRadius = UDim.new(1, 0)
     Logo.Parent = SideBar
-
     local Title = Instance.new("TextLabel")
     Title.Size = UDim2.new(1, -10, 0, 45)
     Title.Position = UDim2.new(0, 5, 0, 75)
@@ -148,14 +127,12 @@ function InconUI:CreateWindow(Options)
     Title.TextWrapped = true
     Title.RichText = true
     Title.Parent = SideBar
-
     RS.RenderStepped:Connect(function()
         local hue = tick() % 4 / 4
         local c = Color3.fromHSV(hue, 1, 1)
         local hex = string.format("#%02X%02X%02X", c.R*255, c.G*255, c.B*255)
         Title.Text = 'Welcome\n<font color="'..hex..'">'..LP.Name..'</font>\nto\n'..TitleText
     end)
-
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Size = UDim2.new(1, 0, 1, -125)
     TabContainer.Position = UDim2.new(0, 0, 0, 125)
@@ -165,7 +142,6 @@ function InconUI:CreateWindow(Options)
     TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabContainer.ZIndex = 13
     TabContainer.Parent = SideBar
-
     local UIListLayout = Instance.new("UIListLayout", TabContainer)
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Padding = UDim.new(0, 5)
@@ -173,7 +149,6 @@ function InconUI:CreateWindow(Options)
     local UIPad = Instance.new("UIPadding", TabContainer)
     UIPad.PaddingTop = UDim.new(0, 2)
     UIPad.PaddingBottom = UDim.new(0, 10)
-
     local PageMask = Instance.new("Frame")
     PageMask.Name = "PageMask"
     PageMask.Size = UDim2.new(1, 0, 1, -22)
@@ -183,11 +158,10 @@ function InconUI:CreateWindow(Options)
     PageMask.ZIndex = 4
     PageMask.Parent = MainFrame
 
-    function InconUI:CreateTab(TabName)
+    function Window:CreateTab(TabName)
         Window.TabIndex = Window.TabIndex + 1
         local CurrentIndex = Window.TabIndex
         local Tab = {}
-        
         local TabPage = Instance.new("ScrollingFrame")
         TabPage.Name = TabName
         TabPage.Size = UDim2.new(1, 0, 1, 0)
@@ -201,16 +175,13 @@ function InconUI:CreateWindow(Options)
         TabPage.ZIndex = 5
         TabPage:SetAttribute("TabIndex", CurrentIndex)
         TabPage.Parent = PageMask
-
         local Grid = Instance.new("UIGridLayout", TabPage)
         Grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
         Grid.CellSize = UDim2.new(0, 113, 0, 30)
         Grid.CellPadding = UDim2.new(0, 3, 0, 3)
-
         local Pad = Instance.new("UIPadding", TabPage)
         Pad.PaddingTop = UDim.new(0, 4)
         Pad.PaddingBottom = UDim.new(0, 4)
-
         local TabBtn = Instance.new("TextButton")
         TabBtn.Size = UDim2.new(0.9, 0, 0, 28)
         TabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -221,14 +192,10 @@ function InconUI:CreateWindow(Options)
         TabBtn.TextSize = 11
         TabBtn.ZIndex = 14
         TabBtn.Parent = TabContainer
-
         table.insert(Window.Pages, TabPage)
-
         TabBtn.MouseButton1Click:Connect(function()
             if Window.CurrentPage == TabPage then return end
-            
             local slideInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-            
             if Window.CurrentPage then
                 local oldIndex = Window.CurrentPage:GetAttribute("TabIndex")
                 if CurrentIndex > oldIndex then
@@ -238,24 +205,20 @@ function InconUI:CreateWindow(Options)
                     TS:Create(Window.CurrentPage, slideInfo, {Position = UDim2.new(0, 0, 1, 0)}):Play()
                     TabPage.Position = UDim2.new(0, 0, -1, 0)
                 end
-
                 local TempPage = Window.CurrentPage
                 task.delay(0.35, function() 
                     if Window.CurrentPage ~= TempPage then TempPage.Visible = false end
                 end)
             end
-            
             TabPage.Visible = true
             TS:Create(TabPage, slideInfo, {Position = UDim2.new(0, 0, 0, 0)}):Play()
             Window.CurrentPage = TabPage
         end)
-
         if #Window.Pages == 1 then
             TabPage.Visible = true
             TabPage.Position = UDim2.new(0, 0, 0, 0)
             Window.CurrentPage = TabPage
         end
-
         function Tab:CreateButton(Options)
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(0, 113, 0, 30)
@@ -268,15 +231,12 @@ function InconUI:CreateWindow(Options)
             Btn.AutoButtonColor = false
             Btn.ZIndex = 6
             Btn.Parent = TabPage
-
             Btn.MouseButton1Click:Connect(function()
                 if Options.Callback then Options.Callback() end
             end)
         end
-
         return Tab
     end
-
     return Window
 end
 
