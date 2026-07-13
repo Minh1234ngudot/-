@@ -1,197 +1,197 @@
-# Incon UI Library
+<div align="center">
 
-A modern, highly optimized, and bug-free Roblox UI Library designed for exploit scripts. Featuring a clean dark theme, smooth tweens, and 0% sub-pixel rendering issues.
+# 🌌 Incon UI Library
 
-## Booting the Library
+[![Lua](https://img.shields.io/badge/Language-Lua-blue.svg?style=for-the-badge&logo=lua)](https://www.lua.org/)
+[![Roblox](https://img.shields.io/badge/Game-Roblox-red.svg?style=for-the-badge&logo=roblox)](https://www.roblox.com/)
+[![Status](https://img.shields.io/badge/Status-Active-success.svg?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)]()
+
+<img src="https://readme-typing-svg.herokuapp.com?font=Inconsolata&weight=600&size=24&pause=1000&color=00FF99&center=true&vCenter=true&width=435&lines=Premium+Roblox+UI+Library;Zero+Sub-Pixel+Tearing;Smooth+Drag+Tweens;Highly+Optimized" alt="Typing SVG" />
+
+A modern, highly optimized, and bug-free Roblox UI Library designed for exploit scripts. Featuring a clean dark theme, smooth tweens, and **0% sub-pixel rendering issues**.
+
+</div>
+
+---
+
+### 🚀 Booting the Library
 
 Load the UI Library using the raw GitHub URL.
 
 ```lua
 local InconUI = loadstring(game:HttpGet("[https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau](https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau)"))()
 
-````
+```
 
-## Creating a Window
+### 🪟 Creating a Window
 
 Initialize your main hub interface. You can set the title and the key to toggle the UI visibility.
 
-``` lua
-local Window = InconUI:CreateWindow({  
-    Name = "Incon Premium Hub",  
-    ToggleKey = Enum.KeyCode.RightControl  
+```lua
+local Window = InconUI:CreateWindow({
+    Name = "Incon Premium Hub",
+    ToggleKey = Enum.KeyCode.RightControl
 })
 
 ```
 
-## Creating a Tab
+### 📑 Creating a Tab
 
-Add tabs to the sidebar to organize your features.
+Create tabs to organize your features.
 
-``` lua
-local MainTab = Window:CreateTab("Main Settings")
-
-```
-
-## UI Components
-
-Add these elements inside your created tabs.
-
-### Section Header
-
-Creates a visual separator and title to categorize elements.
-
-``` lua
-MainTab:CreateSection("Player Configurations")
+```lua
+local Tab = Window:CreateTab("Main Settings")
 
 ```
 
-### Label
+### 📌 Creating a Section
 
-Displays static text information.
+Divide your tab into neat sections.
 
-``` lua
-MainTab:CreateLabel({  
-    Name = "Script loaded successfully!"  
+```lua
+Tab:CreateSection("Player Settings")
+
+```
+
+### 🔘 Creating a Button
+
+Execute a function when clicked.
+
+```lua
+Tab:CreateButton({
+    Name = "Kill All",
+    Callback = function()
+        print("Kill All Clicked")
+    end
 })
 
 ```
 
-### Button
+### 🎚️ Creating a Toggle
 
-A standard clickable button.
+A switch to turn features on or off.
 
-``` lua
-MainTab:CreateButton({  
-    Name = "Kill All",  
-    Callback = function()  
-        print("Clicked")  
-    end  
+```lua
+Tab:CreateToggle({
+    Name = "Auto Farm",
+    Default = false,
+    Callback = function(State)
+        print("Toggle State: ", State)
+    end
 })
 
 ```
 
-### Toggle
+### ➖ Creating a Slider
 
-A switch for boolean (On/Off) states.
+Adjust numerical values smoothly. Includes a manual text input feature.
 
-``` lua
-MainTab:CreateToggle({  
-    Name = "Auto Farm",  
-    Default = false,  
-    Callback = function(State)  
-        print(State)  
-    end  
+```lua
+Tab:CreateSlider({
+    Name = "WalkSpeed",
+    Min = 16,
+    Max = 150,
+    Default = 16,
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end
 })
 
 ```
 
-### Slider
+### 📝 Creating a Textbox
 
-A draggable slider that also allows manual text input for exact values.
+Input text directly into the UI. Triggers when you press Enter.
 
-``` lua
-MainTab:CreateSlider({  
-    Name = "WalkSpeed",  
-    Min = 16,  
-    Max = 150,  
-    Default = 16,  
-    Callback = function(Value)  
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value  
-    end  
+```lua
+Tab:CreateTextbox({
+    Name = "Target Player",
+    Placeholder = "Enter name...",
+    Callback = function(Text)
+        print("Target: ", Text)
+    end
 })
 
 ```
 
-### Textbox
+### ⌨️ Creating a Keybind
 
-An input field to type custom strings or numbers.
+Assign a quick hotkey. Users can click to rebind it dynamically.
 
-``` lua
-MainTab:CreateTextbox({  
-    Name = "Target Player",  
-    Placeholder = "Enter username...",  
-    Callback = function(Text)  
-        print(Text)  
-    end  
+```lua
+Tab:CreateKeybind({
+    Name = "Invisible",
+    Default = Enum.KeyCode.T,
+    Callback = function()
+        print("Invisible Activated!")
+    end
 })
 
 ```
 
-### Keybind
+### 🔽 Creating a Dropdown
 
-A button that listens for a specific key press.
+Select a single option from a list.
 
-``` lua
-MainTab:CreateKeybind({  
-    Name = "Trigger Skill",  
-    Default = Enum.KeyCode.E,  
-    Callback = function()  
-        print("Key Pressed")  
-    end  
+```lua
+Tab:CreateDropdown({
+    Name = "Select Target",
+    List = {"Players", "Mobs", "Bosses"},
+    Callback = function(Value)
+        print("Targeting: ", Value)
+    end
 })
 
 ```
 
-### Dropdown
+### ✔️ Creating a Multi-Dropdown
 
-A selectable list allowing a single choice.
+Select multiple options at once. Returns a table of selected items.
 
-``` lua
-MainTab:CreateDropdown({  
-    Name = "Select Weapon",  
-    List = {"Sword", "Gun", "Bow"},  
-    Callback = function(Value)  
-        print(Value)  
-    end  
+```lua
+Tab:CreateMultiDropdown({
+    Name = "Auto Weapons",
+    List = {"Sword", "Gun", "Bow", "Magic"},
+    Default = {"Sword"},
+    Callback = function(SelectedItems)
+        print("Weapons: ", table.concat(SelectedItems, ", "))
+    end
 })
 
 ```
 
-### Multi-Dropdown
+### 🔔 Using Notifications
 
-A selectable list allowing multiple choices simultaneously.
+Trigger a smooth pop-up notification at the bottom right.
 
-``` lua
-MainTab:CreateMultiDropdown({  
-    Name = "Select Targets",  
-    List = {"Players", "Mobs", "Bosses"},  
-    Default = {"Players"},  
-    Callback = function(SelectedItems)  
-        print(table.concat(SelectedItems, ", "))  
-    end  
+```lua
+InconUI:MakeNotify({
+    Title = "Success!",
+    Content = "Script loaded perfectly.",
+    Time = 3
 })
 
 ```
 
-### Update Log
+### 📜 Creating Update Logs
 
-An expandable card displaying version history with auto-colored prefixes (+ for Add, \~ for Change, - for Remove).
+Show off your recent updates in a sleek, expandable card.
 
-``` lua
-MainTab:CreateUpdateLog({  
-    ver = "v1.0.0",  
-    date = "13/07/2026",  
-    expandable = true,  
-    changes = {  
-        {"+", "Added Client-Sided Mode"},  
-        {"~", "Optimized UI rendering"},  
-        {"-", "Fixed memory leaks"}  
-    }  
+```lua
+Tab:CreateUpdateLog({
+    ver = "v1.0.0",
+    date = "13/07/2026",
+    expandable = true,
+    changes = {
+        {"+", "Released Incon Premium Hub"},
+        {"~", "Optimized Drag Tweens"},
+        {"-", "Removed Sub-pixel rendering bugs"},
+    }
 })
 
 ```
 
-## Global Functions
-
-### Notification
-
-A smooth pop-up notification that appears at the bottom right of the screen. This is called directly from InconUI, not from a Tab.
-
-``` lua
-InconUI:MakeNotify({  
-    Title = "Success",  
-    Content = "Action completed",  
-    Time = 3  
-})
+```
 
 ```
