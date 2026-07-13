@@ -180,6 +180,7 @@ function InconUI:CreateWindow(Options)
     TabContainer.BackgroundTransparency = 1
     TabContainer.BorderSizePixel = 0
     TabContainer.ScrollBarThickness = 0
+    TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
     TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabContainer.ZIndex = 13
     TabContainer.Parent = SideBar
@@ -212,6 +213,7 @@ function InconUI:CreateWindow(Options)
         TabPage.BackgroundTransparency = 1
         TabPage.BorderSizePixel = 0
         TabPage.ScrollBarThickness = 0
+        TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabPage.Visible = false
         TabPage.ZIndex = 5
