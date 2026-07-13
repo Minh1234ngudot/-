@@ -20,7 +20,7 @@ A modern, highly optimized, and bug-free Roblox UI Library designed for exploit 
 Load the UI Library using the raw GitHub URL.
 
 ```lua
-local InconUI = loadstring(game:HttpGet("[https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau](https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau)"))()
+local InconUI = loadstring(game:HttpGet("https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau"))()
 
 ```
 
