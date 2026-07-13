@@ -1,4 +1,4 @@
-local MinhZLib = {}
+local InconUI = {}
 
 local TS = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
@@ -6,19 +6,15 @@ local RS = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
-local MinhZFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+local InconFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
-function MinhZLib:CreateWindow(Options)
+function InconUI:CreateWindow(Options)
     Options = Options or {}
-    local TitleText = Options.Name or "MinhZ Troll GUI"
+    local TitleText = Options.Name or "Incon UI Hub"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
 
-    local Window = { 
-        CurrentPage = nil, 
-        Pages = {},
-        TabIndex = 0 
-    }
+    local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0 }
 
     local ParentUI = nil
     local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -27,11 +23,11 @@ function MinhZLib:CreateWindow(Options)
     if not ParentUI then ParentUI = LP:WaitForChild("PlayerGui") end
 
     for _, gui in ipairs(ParentUI:GetChildren()) do
-        if gui.Name == "MinhZTrollGUI_Hub" then gui:Destroy() end
+        if gui.Name == "InconUI_Hub" then gui:Destroy() end
     end
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "MinhZTrollGUI_Hub"
+    ScreenGui.Name = "InconUI_Hub"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = ParentUI
 
@@ -54,8 +50,8 @@ function MinhZLib:CreateWindow(Options)
     TopBar.Parent = MainFrame
 
     local TopLabel = Instance.new("TextLabel")
-    TopLabel.Text = string.format("           %s  |  %s Toggle", TitleText, KeyName)
-    TopLabel.FontFace = MinhZFont
+    TopLabel.Text = string.format("            %s  |  %s Toggle", TitleText, KeyName)
+    TopLabel.FontFace = InconFont
     TopLabel.TextSize = 12
     TopLabel.TextColor3 = Color3.fromRGB(181, 181, 181)
     TopLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -65,9 +61,9 @@ function MinhZLib:CreateWindow(Options)
     TopLabel.ZIndex = 6
     TopLabel.Parent = TopBar
 
-    local dragging, dragStart, startPos
+    local dragging, dragInput, dragStart, startPos
     TopBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = MainFrame.Position
@@ -76,10 +72,15 @@ function MinhZLib:CreateWindow(Options)
             end)
         end
     end)
+    TopBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
     UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            TS:Create(MainFrame, TweenInfo.new(0.25), {Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)}):Play()
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
@@ -89,7 +90,6 @@ function MinhZLib:CreateWindow(Options)
         end
     end)
 
-    -- FIX: Bù 2 pixel chiều cao và lùi 1 pixel để căn chuẩn 100% với cái viền của MainFrame
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
     SideBarMask.Size = UDim2.new(0, 110, 1, 2) 
@@ -101,7 +101,7 @@ function MinhZLib:CreateWindow(Options)
     SideBarMask.Parent = MainFrame
 
     local SideBar = Instance.new("Frame")
-    SideBar.Name = "MinhZ_Sidebar"
+    SideBar.Name = "Sidebar"
     SideBar.Size = UDim2.new(1, 0, 1, 0)
     SideBar.Position = UDim2.new(0, 0, 0, 0)
     SideBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
@@ -150,8 +150,10 @@ function MinhZLib:CreateWindow(Options)
     Title.RichText = true
     Title.Parent = SideBar
 
-    RS.RenderStepped:Connect(function()
-        local hue = tick() % 4 / 4
+    local RainbowLoop
+    RainbowLoop = RS.RenderStepped:Connect(function()
+        if not Title.Parent then RainbowLoop:Disconnect() return end
+        local hue = os.clock() % 4 / 4
         local c = Color3.fromHSV(hue, 1, 1)
         local hex = string.format("#%02X%02X%02X", c.R*255, c.G*255, c.B*255)
         Title.Text = 'Welcome <font color="'..hex..'">'..LP.Name..'</font>\nto\n'..TitleText
@@ -196,21 +198,22 @@ function MinhZLib:CreateWindow(Options)
         TabPage.BorderSizePixel = 0
         TabPage.ScrollBarThickness = 3
         TabPage.ScrollBarImageColor3 = Color3.fromRGB(71, 71, 71)
-        TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabPage.Visible = false
         TabPage.ZIndex = 5
         TabPage:SetAttribute("TabIndex", CurrentIndex)
         TabPage.Parent = PageMask
 
-        local Grid = Instance.new("UIGridLayout", TabPage)
-        Grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        Grid.CellSize = UDim2.new(0, 113, 0, 30)
-        Grid.CellPadding = UDim2.new(0, 3, 0, 3)
+        local PageLayout = Instance.new("UIListLayout", TabPage)
+        PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        PageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        PageLayout.Padding = UDim.new(0, 5)
 
         local Pad = Instance.new("UIPadding", TabPage)
-        Pad.PaddingTop = UDim.new(0, 4)
-        Pad.PaddingBottom = UDim.new(0, 4)
+        Pad.PaddingTop = UDim.new(0, 5)
+        Pad.PaddingBottom = UDim.new(0, 10)
+        Pad.PaddingLeft = UDim.new(0, 5)
+        Pad.PaddingRight = UDim.new(0, 5)
 
         local TabBtn = Instance.new("TextButton")
         TabBtn.Size = UDim2.new(0.9, 0, 0, 28)
@@ -227,9 +230,7 @@ function MinhZLib:CreateWindow(Options)
 
         TabBtn.MouseButton1Click:Connect(function()
             if Window.CurrentPage == TabPage then return end
-            
             local slideInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-            
             if Window.CurrentPage then
                 local oldIndex = Window.CurrentPage:GetAttribute("TabIndex")
                 if CurrentIndex > oldIndex then
@@ -239,13 +240,9 @@ function MinhZLib:CreateWindow(Options)
                     TS:Create(Window.CurrentPage, slideInfo, {Position = UDim2.new(0, 0, 1, 0)}):Play()
                     TabPage.Position = UDim2.new(0, 0, -1, 0)
                 end
-
                 local TempPage = Window.CurrentPage
-                task.delay(0.35, function() 
-                    if Window.CurrentPage ~= TempPage then TempPage.Visible = false end
-                end)
+                task.delay(0.35, function() if Window.CurrentPage ~= TempPage then TempPage.Visible = false end end)
             end
-            
             TabPage.Visible = true
             TS:Create(TabPage, slideInfo, {Position = UDim2.new(0, 0, 0, 0)}):Play()
             Window.CurrentPage = TabPage
@@ -259,13 +256,14 @@ function MinhZLib:CreateWindow(Options)
 
         function Tab:CreateButton(Options)
             local Btn = Instance.new("TextButton")
-            Btn.Size = UDim2.new(0, 113, 0, 30)
+            Btn.Size = UDim2.new(1, 0, 0, 30)
             Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
             Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
             Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
-            Btn.Text = Options.Name or "Button"
-            Btn.FontFace = MinhZFont
-            Btn.TextSize = 11
+            Btn.Text = "   " .. (Options.Name or "Button")
+            Btn.TextXAlignment = Enum.TextXAlignment.Left
+            Btn.FontFace = InconFont
+            Btn.TextSize = 12
             Btn.AutoButtonColor = false
             Btn.ZIndex = 6
             Btn.Parent = TabPage
@@ -275,10 +273,199 @@ function MinhZLib:CreateWindow(Options)
             end)
         end
 
+        function Tab:CreateLabel(Options)
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Size = UDim2.new(1, 0, 0, 30)
+            Lbl.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+            Lbl.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Lbl.Text = "   " .. (Options.Name or "Label")
+            Lbl.TextXAlignment = Enum.TextXAlignment.Left
+            Lbl.FontFace = InconFont
+            Lbl.TextSize = 12
+            Lbl.ZIndex = 6
+            Lbl.Parent = TabPage
+        end
+
+        function Tab:CreateToggle(Options)
+            local State = Options.Default or false
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1, 0, 0, 30)
+            Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Btn.Text = "   " .. (Options.Name or "Toggle")
+            Btn.TextXAlignment = Enum.TextXAlignment.Left
+            Btn.FontFace = InconFont
+            Btn.TextSize = 12
+            Btn.AutoButtonColor = false
+            Btn.ZIndex = 6
+            Btn.Parent = TabPage
+
+            local Indicator = Instance.new("Frame")
+            Indicator.Size = UDim2.new(0, 14, 0, 14)
+            Indicator.Position = UDim2.new(1, -22, 0.5, -7)
+            Indicator.BackgroundColor3 = State and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+            Indicator.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Indicator.ZIndex = 7
+            Indicator.Parent = Btn
+            Instance.new("UICorner", Indicator).CornerRadius = UDim.new(0, 3)
+
+            Btn.MouseButton1Click:Connect(function()
+                State = not State
+                TS:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = State and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)}):Play()
+                if Options.Callback then Options.Callback(State) end
+            end)
+        end
+
+        function Tab:CreateSlider(Options)
+            local Min = Options.Min or 0
+            local Max = Options.Max or 100
+            local Default = Options.Default or Min
+
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1, 0, 0, 40)
+            Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Btn.Text = ""
+            Btn.AutoButtonColor = false
+            Btn.ZIndex = 6
+            Btn.Parent = TabPage
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -20, 0.5, 0)
+            Title.Position = UDim2.new(0, 10, 0, 2)
+            Title.BackgroundTransparency = 1
+            Title.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Text = Options.Name .. " : " .. Default
+            Title.FontFace = InconFont
+            Title.TextSize = 12
+            Title.ZIndex = 7
+            Title.Parent = Btn
+
+            local SliderBack = Instance.new("Frame")
+            SliderBack.Size = UDim2.new(1, -20, 0, 6)
+            SliderBack.Position = UDim2.new(0, 10, 0.65, 0)
+            SliderBack.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            SliderBack.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            SliderBack.ZIndex = 7
+            SliderBack.Parent = Btn
+            Instance.new("UICorner", SliderBack).CornerRadius = UDim.new(1, 0)
+
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
+            SliderFill.BackgroundColor3 = Color3.fromRGB(181, 181, 181)
+            SliderFill.BorderSizePixel = 0
+            SliderFill.ZIndex = 8
+            SliderFill.Parent = SliderBack
+            Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+
+            local dragging = false
+            local function update(input)
+                local pos = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+                local value = math.floor(Min + ((Max - Min) * pos))
+                TS:Create(SliderFill, TweenInfo.new(0.05), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+                Title.Text = Options.Name .. " : " .. value
+                if Options.Callback then Options.Callback(value) end
+            end
+
+            Btn.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    update(input)
+                end
+            end)
+            UIS.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
+            end)
+            UIS.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    update(input)
+                end
+            end)
+        end
+
+        function Tab:CreateDropdown(Options)
+            local List = Options.List or {}
+            local isOpen = false
+
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1, 0, 0, 30)
+            Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Btn.Text = "   " .. (Options.Name or "Dropdown")
+            Btn.TextXAlignment = Enum.TextXAlignment.Left
+            Btn.FontFace = InconFont
+            Btn.TextSize = 12
+            Btn.AutoButtonColor = false
+            Btn.ClipsDescendants = true
+            Btn.ZIndex = 6
+            Btn.Parent = TabPage
+
+            local Icon = Instance.new("TextLabel")
+            Icon.Size = UDim2.new(0, 20, 0, 30)
+            Icon.Position = UDim2.new(1, -25, 0, 0)
+            Icon.BackgroundTransparency = 1
+            Icon.TextColor3 = Color3.fromRGB(151, 151, 151)
+            Icon.Text = "V"
+            Icon.FontFace = InconFont
+            Icon.TextSize = 12
+            Icon.ZIndex = 7
+            Icon.Parent = Btn
+
+            local DropList = Instance.new("ScrollingFrame")
+            DropList.Size = UDim2.new(1, 0, 1, -30)
+            DropList.Position = UDim2.new(0, 0, 0, 30)
+            DropList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            DropList.BorderSizePixel = 0
+            DropList.ScrollBarThickness = 2
+            DropList.ScrollBarImageColor3 = Color3.fromRGB(71, 71, 71)
+            DropList.CanvasSize = UDim2.new(0, 0, 0, #List * 25)
+            DropList.ZIndex = 7
+            DropList.Parent = Btn
+
+            local ListLayout = Instance.new("UIListLayout", DropList)
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local function toggleDrop()
+                isOpen = not isOpen
+                Icon.Text = isOpen and "^" or "V"
+                local targetHeight = isOpen and (30 + math.min(#List * 25, 120)) or 30
+                TS:Create(Btn, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
+            end
+
+            Btn.MouseButton1Click:Connect(toggleDrop)
+
+            for _, v in ipairs(List) do
+                local Item = Instance.new("TextButton")
+                Item.Size = UDim2.new(1, 0, 0, 25)
+                Item.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                Item.BorderColor3 = Color3.fromRGB(51, 51, 51)
+                Item.TextColor3 = Color3.fromRGB(180, 180, 180)
+                Item.Text = "      " .. v
+                Item.TextXAlignment = Enum.TextXAlignment.Left
+                Item.FontFace = InconFont
+                Item.TextSize = 11
+                Item.AutoButtonColor = false
+                Item.ZIndex = 8
+                Item.Parent = DropList
+
+                Item.MouseButton1Click:Connect(function()
+                    Btn.Text = "   " .. Options.Name .. " : " .. v
+                    if Options.Callback then Options.Callback(v) end
+                    toggleDrop()
+                end)
+            end
+        end
+
         return Tab
     end
 
     return Window
 end
 
-return MinhZLib
+return InconUI
