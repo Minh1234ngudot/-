@@ -91,8 +91,8 @@ function InconUI:CreateWindow(Options)
 
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
-    SideBarMask.Size = UDim2.new(0, 110, 1, 2) 
-    SideBarMask.Position = UDim2.new(0, -111, 0, -1) 
+    SideBarMask.Size = UDim2.new(0, 110, 1, 0) 
+    SideBarMask.Position = UDim2.new(0, -110, 0, 0) 
     SideBarMask.BorderSizePixel = 0
     SideBarMask.BackgroundTransparency = 1
     SideBarMask.ClipsDescendants = true 
@@ -153,7 +153,7 @@ function InconUI:CreateWindow(Options)
         local hue = tick() % 4 / 4
         local c = Color3.fromHSV(hue, 1, 1)
         local hex = string.format("#%02X%02X%02X", c.R*255, c.G*255, c.B*255)
-        Title.Text = 'Welcome <font color="'..hex..'">'..LP.Name..'</font>\nto '..TitleText
+        Title.Text = 'Welcome\n<font color="'..hex..'">'..LP.Name..'</font>\nto\n'..TitleText
     end)
 
     local TabContainer = Instance.new("ScrollingFrame")
@@ -183,7 +183,7 @@ function InconUI:CreateWindow(Options)
     PageMask.ZIndex = 4
     PageMask.Parent = MainFrame
 
-    function Window:CreateTab(TabName)
+    function InconUI:CreateTab(TabName)
         Window.TabIndex = Window.TabIndex + 1
         local CurrentIndex = Window.TabIndex
         local Tab = {}
