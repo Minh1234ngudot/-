@@ -1,11 +1,9 @@
 local InconUI = {}
-
 local TS = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
-
 local InconFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
 function InconUI:CreateWindow(Options)
@@ -13,9 +11,7 @@ function InconUI:CreateWindow(Options)
     local TitleText = Options.Name or "Incon UI Hub"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
-
     local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0 }
-
     local ParentUI = nil
     local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
     if success and coreGui then ParentUI = coreGui end
@@ -35,6 +31,7 @@ function InconUI:CreateWindow(Options)
     MainFrame.Name = "MainFrame"
     MainFrame.BackgroundColor3 = Color3.fromRGB(11, 11, 11)
     MainFrame.BorderColor3 = Color3.fromRGB(56, 56, 56)
+    MainFrame.BorderSizePixel = 1
     MainFrame.Size = UDim2.new(0, 360, 0, 240)
     MainFrame.Position = UDim2.new(0.5, -180, 0.5, -120)
     MainFrame.ClipsDescendants = false
@@ -92,11 +89,11 @@ function InconUI:CreateWindow(Options)
 
     local SideBarMask = Instance.new("Frame")
     SideBarMask.Name = "SideBarMask"
-    SideBarMask.Size = UDim2.new(0, 110, 1, 0) 
-    SideBarMask.Position = UDim2.new(0, -110, 0, 0) 
+    SideBarMask.Size = UDim2.new(0, 110, 1, 2)
+    SideBarMask.Position = UDim2.new(0, -111, 0, -1)
     SideBarMask.BorderSizePixel = 0
     SideBarMask.BackgroundTransparency = 1
-    SideBarMask.ClipsDescendants = true 
+    SideBarMask.ClipsDescendants = true
     SideBarMask.ZIndex = 12
     SideBarMask.Parent = MainFrame
 
@@ -196,8 +193,7 @@ function InconUI:CreateWindow(Options)
         TabPage.Size = UDim2.new(1, 0, 1, 0)
         TabPage.BackgroundTransparency = 1
         TabPage.BorderSizePixel = 0
-        TabPage.ScrollBarThickness = 3
-        TabPage.ScrollBarImageColor3 = Color3.fromRGB(71, 71, 71)
+        TabPage.ScrollBarThickness = 0
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabPage.Visible = false
         TabPage.ZIndex = 5
@@ -428,8 +424,7 @@ function InconUI:CreateWindow(Options)
             DropList.Position = UDim2.new(0, 0, 0, 30)
             DropList.BackgroundTransparency = 1
             DropList.BorderSizePixel = 0
-            DropList.ScrollBarThickness = 2
-            DropList.ScrollBarImageColor3 = Color3.fromRGB(71, 71, 71)
+            DropList.ScrollBarThickness = 0
             DropList.CanvasSize = UDim2.new(0, 0, 0, #List * 25)
             DropList.ZIndex = 7
             DropList.Parent = DropContainer
