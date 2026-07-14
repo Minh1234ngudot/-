@@ -4,6 +4,7 @@ local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local Players = game:GetService("Players")
 local TSvc = game:GetService("TextService")
+local Http = game:GetService("HttpService")
 local LP = Players.LocalPlayer
 local InconFont = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
@@ -106,7 +107,8 @@ function InconUI:CreateWindow(Options)
     local TitleText = Options.Name or "Incon UI Library"
     local BindKey = Options.ToggleKey or Enum.KeyCode.RightControl
     local KeyName = (BindKey == Enum.KeyCode.RightControl) and "RCtrl" or BindKey.Name
-    local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0, Connections = {} }
+    local ConfigFolder = Options.Folder or "InconConfigs"
+    local Window = { CurrentPage = nil, Pages = {}, TabIndex = 0, Connections = {}, Flags = {}, Elements = {} }
     local ParentUI = nil
     local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
     if success and coreGui then ParentUI = coreGui end
@@ -120,6 +122,7 @@ function InconUI:CreateWindow(Options)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "InconUI_Hub"
     ScreenGui.ResetOnSpawn = false
+    ScreenGui.IgnoreGuiInset = true
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = ParentUI
 
@@ -328,6 +331,98 @@ function InconUI:CreateWindow(Options)
     PageMask.ZIndex = 11
     PageMask.Parent = MainBg
 
+    function Window:InitFolder()
+        if isfolder and makefolder then
+            if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
+            if not isfolder(ConfigFolder .. "/settings") then makefolder(ConfigFolder .. "/settings") end
+        end
+    end
+
+    function Window:GetConfigs()
+        local list = {}
+        if listfiles and isfolder and isfolder(ConfigFolder .. "/settings") then
+            for _, file in ipairs(listfiles(ConfigFolder .. "/settings")) do
+                if file:sub(-5) == ".json" then
+                    local name = file:match("([^/\\]+)%.json$")
+                    if name then table.insert(list, name) end
+                end
+            end
+        end
+        return list
+    end
+
+    function Window:SaveConfig(Name)
+        if not writefile then return false end
+        Window:InitFolder()
+        local data = Http:JSONEncode(Window.Flags)
+        writefile(ConfigFolder .. "/settings/" .. Name .. ".json", data)
+        return true
+    end
+
+    function Window:LoadConfig(Name)
+        if not readfile or not isfile then return false end
+        local path = ConfigFolder .. "/settings/" .. Name .. ".json"
+        if isfile(path) then
+            local s, d = pcall(function() return Http:JSONDecode(readfile(path)) end)
+            if s and d then
+                for flag, value in pairs(d) do
+                    if Window.Elements[flag] then
+                        task.spawn(function() Window.Elements[flag].SetValue(value) end)
+                    end
+                end
+                return true
+            end
+        end
+        return false
+    end
+
+    function Window:DeleteConfig(Name)
+        if not isfile or not delfile then return false end
+        local path = ConfigFolder .. "/settings/" .. Name .. ".json"
+        if isfile(path) then
+            delfile(path)
+            return true
+        end
+        return false
+    end
+
+    function Window:SetAutoload(Name)
+        if not writefile then return end
+        Window:InitFolder()
+        writefile(ConfigFolder .. "/settings/autoload.txt", Name)
+    end
+
+    function Window:GetAutoload()
+        if readfile and isfile then
+            local path = ConfigFolder .. "/settings/autoload.txt"
+            if isfile(path) then
+                local content = readfile(path)
+                if content and content ~= "" then return content end
+            end
+        end
+        return nil
+    end
+
+    function Window:ClearAutoload()
+        if writefile then
+            Window:InitFolder()
+            writefile(ConfigFolder .. "/settings/autoload.txt", "")
+        end
+    end
+
+    function Window:AutoLoad()
+        local currentAuto = Window:GetAutoload()
+        if currentAuto then
+            if Window:LoadConfig(currentAuto) then
+                InconUI:MakeNotify({
+                    Title = "Config Manager",
+                    Content = "Auto Loaded Config: " .. currentAuto,
+                    Time = 4
+                })
+            end
+        end
+    end
+
     function Window:CreateTab(TabName)
         Window.TabIndex = Window.TabIndex + 1
         local CurrentIndex = Window.TabIndex
@@ -430,8 +525,8 @@ function InconUI:CreateWindow(Options)
             Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
             Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
             Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
-            Btn.Text = "   " .. (Options.Name or "Button")
-            Btn.TextXAlignment = Enum.TextXAlignment.Left
+            Btn.Text = Options.Name or "Button"
+            Btn.TextXAlignment = Enum.TextXAlignment.Center
             Btn.FontFace = InconFont
             Btn.TextSize = 12
             Btn.AutoButtonColor = false
@@ -443,36 +538,111 @@ function InconUI:CreateWindow(Options)
             end)
         end
 
+        function Tab:CreateDualButton(Options)
+            local Container = Instance.new("Frame")
+            Container.Size = UDim2.new(1, 0, 0, 30)
+            Container.BackgroundTransparency = 1
+            Container.ZIndex = 13
+            Container.Parent = TabPage
+
+            local Btn1 = Instance.new("TextButton")
+            Btn1.Size = UDim2.new(0.5, -2, 1, 0)
+            Btn1.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            Btn1.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Btn1.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Btn1.Text = Options.Name1 or "Button 1"
+            Btn1.TextXAlignment = Enum.TextXAlignment.Center
+            Btn1.FontFace = InconFont
+            Btn1.TextSize = 12
+            Btn1.AutoButtonColor = false
+            Btn1.ZIndex = 14
+            Btn1.Parent = Container
+            Btn1.MouseButton1Click:Connect(function() if Options.Callback1 then Options.Callback1() end end)
+
+            local Btn2 = Instance.new("TextButton")
+            Btn2.Size = UDim2.new(0.5, -3, 1, 0)
+            Btn2.Position = UDim2.new(0.5, 3, 0, 0)
+            Btn2.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            Btn2.BorderColor3 = Color3.fromRGB(51, 51, 51)
+            Btn2.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Btn2.Text = Options.Name2 or "Button 2"
+            Btn2.TextXAlignment = Enum.TextXAlignment.Center
+            Btn2.FontFace = InconFont
+            Btn2.TextSize = 12
+            Btn2.AutoButtonColor = false
+            Btn2.ZIndex = 14
+            Btn2.Parent = Container
+            Btn2.MouseButton1Click:Connect(function() if Options.Callback2 then Options.Callback2() end end)
+        end
+
         function Tab:CreateLabel(Options)
+            local LblObj = {}
             local Lbl = Instance.new("TextLabel")
             Lbl.Size = UDim2.new(1, 0, 0, 30)
             Lbl.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
             Lbl.BorderColor3 = Color3.fromRGB(51, 51, 51)
-            Lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Lbl.Text = "   " .. (Options.Name or "Label")
-            Lbl.TextXAlignment = Enum.TextXAlignment.Left
-            Lbl.FontFace = InconFont
-            Lbl.TextSize = 12
+            Lbl.Text = ""
             Lbl.ZIndex = 13
             Lbl.Parent = TabPage
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -20, 1, 0)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Options.Name or "Label"
+            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.FontFace = InconFont
+            Title.TextSize = 12
+            Title.ZIndex = 14
+            Title.Parent = Lbl
+
+            function LblObj:SetText(NewText)
+                Title.Text = NewText
+            end
+
+            return LblObj
         end
 
         function Tab:CreateToggle(Options)
             local State = Options.Default or false
+            local Indicator
+
+            if Options.Flag then
+                Window.Flags[Options.Flag] = State
+                Window.Elements[Options.Flag] = {
+                    SetValue = function(val)
+                        if not Indicator or not Indicator:IsDescendantOf(game) then return end
+                        State = val
+                        Window.Flags[Options.Flag] = State
+                        TS:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = State and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)}):Play()
+                        if Options.Callback then Options.Callback(State) end
+                    end
+                }
+            end
+
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 30)
             Btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
             Btn.BorderColor3 = Color3.fromRGB(51, 51, 51)
-            Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
-            Btn.Text = "   " .. (Options.Name or "Toggle")
-            Btn.TextXAlignment = Enum.TextXAlignment.Left
-            Btn.FontFace = InconFont
-            Btn.TextSize = 12
+            Btn.Text = ""
             Btn.AutoButtonColor = false
             Btn.ZIndex = 13
             Btn.Parent = TabPage
 
-            local Indicator = Instance.new("Frame")
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -40, 1, 0)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Options.Name or "Toggle"
+            Title.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.FontFace = InconFont
+            Title.TextSize = 12
+            Title.ZIndex = 14
+            Title.Parent = Btn
+
+            Indicator = Instance.new("Frame")
             Indicator.Size = UDim2.new(0, 14, 0, 14)
             Indicator.Position = UDim2.new(1, -22, 0.5, -7)
             Indicator.BackgroundColor3 = State and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
@@ -483,6 +653,7 @@ function InconUI:CreateWindow(Options)
 
             Btn.MouseButton1Click:Connect(function()
                 State = not State
+                if Options.Flag then Window.Flags[Options.Flag] = State end
                 TS:Create(Indicator, TweenInfo.new(0.2), {BackgroundColor3 = State and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)}):Play()
                 if Options.Callback then Options.Callback(State) end
             end)
@@ -493,6 +664,7 @@ function InconUI:CreateWindow(Options)
             local Max = Options.Max or 100
             local Default = Options.Default or Min
             local CurrentValue = Default
+            local SliderFill, ValueBox
 
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 40)
@@ -535,7 +707,7 @@ function InconUI:CreateWindow(Options)
             ValWrap.ZIndex = 14
             ValWrap.Parent = TopRow
 
-            local ValueBox = Instance.new("TextBox")
+            ValueBox = Instance.new("TextBox")
             ValueBox.Size = UDim2.new(1, 0, 0, 16)
             ValueBox.AnchorPoint = Vector2.new(0, 0.5)
             ValueBox.Position = UDim2.new(0, 0, 0.5, 2)
@@ -558,7 +730,7 @@ function InconUI:CreateWindow(Options)
             SliderBack.Parent = Btn
             Instance.new("UICorner", SliderBack).CornerRadius = UDim.new(1, 0)
 
-            local SliderFill = Instance.new("Frame")
+            SliderFill = Instance.new("Frame")
             SliderFill.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
             SliderFill.BackgroundColor3 = Color3.fromRGB(181, 181, 181)
             SliderFill.BorderSizePixel = 0
@@ -566,11 +738,28 @@ function InconUI:CreateWindow(Options)
             SliderFill.Parent = SliderBack
             Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
 
+            if Options.Flag then
+                Window.Flags[Options.Flag] = Default
+                Window.Elements[Options.Flag] = {
+                    SetValue = function(val)
+                        if not SliderFill or not SliderFill:IsDescendantOf(game) then return end
+                        local num = math.clamp(tonumber(val) or Min, Min, Max)
+                        CurrentValue = num
+                        Window.Flags[Options.Flag] = num
+                        local pos = (num - Min) / (Max - Min)
+                        TS:Create(SliderFill, TweenInfo.new(0.2), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+                        ValueBox.Text = tostring(num)
+                        if Options.Callback then Options.Callback(num) end
+                    end
+                }
+            end
+
             local dragging = false
             local function update(input)
                 local pos = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
                 local value = math.floor(Min + ((Max - Min) * pos))
                 CurrentValue = value
+                if Options.Flag then Window.Flags[Options.Flag] = value end
                 TS:Create(SliderFill, TweenInfo.new(0.05), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
                 ValueBox.Text = tostring(value)
                 if Options.Callback then Options.Callback(value) end
@@ -604,6 +793,7 @@ function InconUI:CreateWindow(Options)
                 if num then
                     num = math.clamp(math.floor(num), Min, Max)
                     CurrentValue = num
+                    if Options.Flag then Window.Flags[Options.Flag] = num end
                     local pos = (num - Min) / (Max - Min)
                     TS:Create(SliderFill, TweenInfo.new(0.2), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
                     ValueBox.Text = tostring(num)
@@ -615,6 +805,7 @@ function InconUI:CreateWindow(Options)
         end
 
         function Tab:CreateTextbox(Options)
+            local BoxObj = {}
             local BoxContainer = Instance.new("Frame")
             BoxContainer.Size = UDim2.new(1, 0, 0, 30)
             BoxContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
@@ -649,16 +840,43 @@ function InconUI:CreateWindow(Options)
             TxtBox.Parent = BoxContainer
             Instance.new("UICorner", TxtBox).CornerRadius = UDim.new(0, 3)
 
-            TxtBox.FocusLost:Connect(function(ep)
-                if ep and Options.Callback then
-                    Options.Callback(TxtBox.Text)
-                end
+            if Options.Flag then
+                Window.Flags[Options.Flag] = ""
+                Window.Elements[Options.Flag] = {
+                    SetValue = function(val)
+                        if not TxtBox or not TxtBox:IsDescendantOf(game) then return end
+                        TxtBox.Text = tostring(val)
+                        Window.Flags[Options.Flag] = TxtBox.Text
+                        if Options.Callback then Options.Callback(TxtBox.Text) end
+                    end
+                }
+            end
+
+            TxtBox.FocusLost:Connect(function()
+                if Options.Flag then Window.Flags[Options.Flag] = TxtBox.Text end
+                if Options.Callback then Options.Callback(TxtBox.Text) end
             end)
+
+            function BoxObj:SetText(val)
+                if TxtBox and TxtBox:IsDescendantOf(game) then
+                    TxtBox.Text = tostring(val)
+                end
+            end
+
+            function BoxObj:GetText()
+                if TxtBox and TxtBox:IsDescendantOf(game) then
+                    return TxtBox.Text
+                end
+                return ""
+            end
+
+            return BoxObj
         end
 
         function Tab:CreateKeybind(Options)
             local Key = Options.Default or Enum.KeyCode.E
             local Waiting = false
+            local BindBtn
 
             local BindContainer = Instance.new("Frame")
             BindContainer.Size = UDim2.new(1, 0, 0, 30)
@@ -679,7 +897,7 @@ function InconUI:CreateWindow(Options)
             Lbl.ZIndex = 14
             Lbl.Parent = BindContainer
 
-            local BindBtn = Instance.new("TextButton")
+            BindBtn = Instance.new("TextButton")
             BindBtn.AnchorPoint = Vector2.new(1, 0.5)
             BindBtn.Size = UDim2.new(0, 60, 0, 20)
             BindBtn.Position = UDim2.new(1, -10, 0.5, 0)
@@ -694,8 +912,22 @@ function InconUI:CreateWindow(Options)
             BindBtn.Parent = BindContainer
             Instance.new("UICorner", BindBtn).CornerRadius = UDim.new(0, 3)
 
-            local waitToken = 0
+            if Options.Flag then
+                Window.Flags[Options.Flag] = Key.Name
+                Window.Elements[Options.Flag] = {
+                    SetValue = function(val)
+                        if not BindBtn or not BindBtn:IsDescendantOf(game) then return end
+                        local s, e = pcall(function() return Enum.KeyCode[val] end)
+                        if s and e then
+                            Key = e
+                            BindBtn.Text = Key.Name
+                            Window.Flags[Options.Flag] = Key.Name
+                        end
+                    end
+                }
+            end
 
+            local waitToken = 0
             BindBtn.MouseButton1Click:Connect(function()
                 Waiting = true
                 BindBtn.Text = "..."
@@ -715,6 +947,7 @@ function InconUI:CreateWindow(Options)
                 if Waiting and input.UserInputType == Enum.UserInputType.Keyboard then
                     Key = input.KeyCode
                     BindBtn.Text = Key.Name
+                    if Options.Flag then Window.Flags[Options.Flag] = Key.Name end
                     Waiting = false
                 elseif not gp and input.KeyCode == Key and not Waiting then
                     if Options.Callback then Options.Callback() end
@@ -725,8 +958,10 @@ function InconUI:CreateWindow(Options)
         function Tab:CreateDropdown(Options)
             local List = Options.List or {}
             local isOpen = false
+            local DropObj = {}
+            local Btn, DropContainer, DropList, Title
 
-            local DropContainer = Instance.new("Frame")
+            DropContainer = Instance.new("Frame")
             DropContainer.Size = UDim2.new(1, 0, 0, 30)
             DropContainer.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
             DropContainer.BorderColor3 = Color3.fromRGB(51, 51, 51)
@@ -734,17 +969,25 @@ function InconUI:CreateWindow(Options)
             DropContainer.ZIndex = 13
             DropContainer.Parent = TabPage
 
-            local Btn = Instance.new("TextButton")
+            Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 30)
             Btn.BackgroundTransparency = 1
-            Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
-            Btn.Text = "   " .. (Options.Name or "Dropdown")
-            Btn.TextXAlignment = Enum.TextXAlignment.Left
-            Btn.FontFace = InconFont
-            Btn.TextSize = 12
+            Btn.Text = ""
             Btn.AutoButtonColor = false
             Btn.ZIndex = 14
             Btn.Parent = DropContainer
+
+            Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -30, 1, 0)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Options.Name .. " : None"
+            Title.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.FontFace = InconFont
+            Title.TextSize = 12
+            Title.ZIndex = 15
+            Title.Parent = Btn
 
             local Icon = Instance.new("TextLabel")
             Icon.Size = UDim2.new(0, 20, 0, 30)
@@ -757,18 +1000,29 @@ function InconUI:CreateWindow(Options)
             Icon.ZIndex = 15
             Icon.Parent = Btn
 
-            local DropList = Instance.new("ScrollingFrame")
+            DropList = Instance.new("ScrollingFrame")
             DropList.Size = UDim2.new(1, 0, 1, -30)
             DropList.Position = UDim2.new(0, 0, 0, 30)
             DropList.BackgroundTransparency = 1
             DropList.BorderSizePixel = 0
             DropList.ScrollBarThickness = 0
-            DropList.CanvasSize = UDim2.new(0, 0, 0, #List * 25)
             DropList.ZIndex = 14
             DropList.Parent = DropContainer
 
             local ListLayout = Instance.new("UIListLayout", DropList)
             ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            if Options.Flag then
+                Window.Flags[Options.Flag] = ""
+                Window.Elements[Options.Flag] = {
+                    SetValue = function(val)
+                        if not Title or not Title:IsDescendantOf(game) then return end
+                        Title.Text = Options.Name .. " : " .. tostring(val)
+                        Window.Flags[Options.Flag] = tostring(val)
+                        if Options.Callback then Options.Callback(val) end
+                    end
+                }
+            end
 
             local function toggleDrop()
                 isOpen = not isOpen
@@ -779,26 +1033,56 @@ function InconUI:CreateWindow(Options)
 
             Btn.MouseButton1Click:Connect(toggleDrop)
 
-            for _, v in ipairs(List) do
-                local Item = Instance.new("TextButton")
-                Item.Size = UDim2.new(1, 0, 0, 25)
-                Item.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                Item.BorderSizePixel = 0
-                Item.TextColor3 = Color3.fromRGB(180, 180, 180)
-                Item.Text = "      " .. v
-                Item.TextXAlignment = Enum.TextXAlignment.Left
-                Item.FontFace = InconFont
-                Item.TextSize = 11
-                Item.AutoButtonColor = false
-                Item.ZIndex = 15
-                Item.Parent = DropList
+            function DropObj:Refresh(newList)
+                List = newList
+                for _, child in ipairs(DropList:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
+                end
+                DropList.CanvasSize = UDim2.new(0, 0, 0, #List * 25)
+                if isOpen then
+                    local targetHeight = 30 + math.min(#List * 25, 120)
+                    TS:Create(DropContainer, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
+                end
 
-                Item.MouseButton1Click:Connect(function()
-                    Btn.Text = "   " .. Options.Name .. " : " .. v
-                    if Options.Callback then Options.Callback(v) end
-                    toggleDrop()
-                end)
+                for _, v in ipairs(List) do
+                    local Item = Instance.new("TextButton")
+                    Item.Size = UDim2.new(1, 0, 0, 25)
+                    Item.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                    Item.BorderSizePixel = 0
+                    Item.Text = ""
+                    Item.AutoButtonColor = false
+                    Item.ZIndex = 15
+                    Item.Parent = DropList
+
+                    local ItemLbl = Instance.new("TextLabel")
+                    ItemLbl.Size = UDim2.new(1, -20, 1, 0)
+                    ItemLbl.Position = UDim2.new(0, 20, 0, 0)
+                    ItemLbl.BackgroundTransparency = 1
+                    ItemLbl.Text = v
+                    ItemLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+                    ItemLbl.TextXAlignment = Enum.TextXAlignment.Left
+                    ItemLbl.FontFace = InconFont
+                    ItemLbl.TextSize = 11
+                    ItemLbl.ZIndex = 16
+                    ItemLbl.Parent = Item
+
+                    Item.MouseButton1Click:Connect(function()
+                        Title.Text = Options.Name .. " : " .. v
+                        if Options.Flag then Window.Flags[Options.Flag] = v end
+                        if Options.Callback then Options.Callback(v) end
+                        toggleDrop()
+                    end)
+                end
             end
+
+            function DropObj:SetTitle(newTitle)
+                if Title and Title:IsDescendantOf(game) then
+                    Title.Text = Options.Name .. " : " .. tostring(newTitle)
+                end
+            end
+
+            DropObj:Refresh(List)
+            return DropObj
         end
 
         function Tab:CreateMultiDropdown(Options)
@@ -817,24 +1101,31 @@ function InconUI:CreateWindow(Options)
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, -25, 0, 30)
             Btn.BackgroundTransparency = 1
-            Btn.TextColor3 = Color3.fromRGB(201, 201, 201)
-            
-            local function updateText()
-                if #Selected == 0 then
-                    Btn.Text = "   " .. (Options.Name) .. " : None"
-                else
-                    Btn.Text = "   " .. (Options.Name) .. " : " .. table.concat(Selected, ", ")
-                end
-            end
-            updateText()
-            
-            Btn.TextXAlignment = Enum.TextXAlignment.Left
-            Btn.TextTruncate = Enum.TextTruncate.AtEnd
-            Btn.FontFace = InconFont
-            Btn.TextSize = 12
+            Btn.Text = ""
             Btn.AutoButtonColor = false
             Btn.ZIndex = 14
             Btn.Parent = DropContainer
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -30, 1, 0)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.TextColor3 = Color3.fromRGB(201, 201, 201)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.TextTruncate = Enum.TextTruncate.AtEnd
+            Title.FontFace = InconFont
+            Title.TextSize = 12
+            Title.ZIndex = 15
+            Title.Parent = Btn
+            
+            local function updateText()
+                if #Selected == 0 then
+                    Title.Text = Options.Name .. " : None"
+                else
+                    Title.Text = Options.Name .. " : " .. table.concat(Selected, ", ")
+                end
+            end
+            updateText()
 
             local IconBtn = Instance.new("TextButton")
             IconBtn.Size = UDim2.new(0, 25, 0, 30)
@@ -867,6 +1158,33 @@ function InconUI:CreateWindow(Options)
             local ListLayout = Instance.new("UIListLayout", DropList)
             ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+            if Options.Flag then
+                Window.Flags[Options.Flag] = Selected
+                Window.Elements[Options.Flag] = {
+                    SetValue = function(val)
+                        if not DropList or not DropList:IsDescendantOf(game) then return end
+                        if type(val) == "table" then
+                            Selected = val
+                            Window.Flags[Options.Flag] = Selected
+                            updateText()
+                            for _, child in ipairs(DropList:GetChildren()) do
+                                if child:IsA("TextButton") then
+                                    local ItemLbl = child:FindFirstChild("TextLabel")
+                                    if ItemLbl then
+                                        if table.find(Selected, ItemLbl.Text) then
+                                            ItemLbl.TextColor3 = Color3.fromRGB(100, 255, 100)
+                                        else
+                                            ItemLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+                                        end
+                                    end
+                                end
+                            end
+                            if Options.Callback then Options.Callback(Selected) end
+                        end
+                    end
+                }
+            end
+
             local function toggleDrop()
                 isOpen = not isOpen
                 Icon.Text = isOpen and "^" or "V"
@@ -883,25 +1201,34 @@ function InconUI:CreateWindow(Options)
                 Item.Size = UDim2.new(1, 0, 0, 25)
                 Item.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
                 Item.BorderSizePixel = 0
-                Item.TextColor3 = isSel and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(180, 180, 180)
-                Item.Text = "      " .. v
-                Item.TextXAlignment = Enum.TextXAlignment.Left
-                Item.FontFace = InconFont
-                Item.TextSize = 11
+                Item.Text = ""
                 Item.AutoButtonColor = false
                 Item.ZIndex = 15
                 Item.Parent = DropList
+
+                local ItemLbl = Instance.new("TextLabel")
+                ItemLbl.Size = UDim2.new(1, -20, 1, 0)
+                ItemLbl.Position = UDim2.new(0, 20, 0, 0)
+                ItemLbl.BackgroundTransparency = 1
+                ItemLbl.Text = v
+                ItemLbl.TextColor3 = isSel and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(180, 180, 180)
+                ItemLbl.TextXAlignment = Enum.TextXAlignment.Left
+                ItemLbl.FontFace = InconFont
+                ItemLbl.TextSize = 11
+                ItemLbl.ZIndex = 16
+                ItemLbl.Parent = Item
 
                 Item.MouseButton1Click:Connect(function()
                     local idx = table.find(Selected, v)
                     if idx then
                         table.remove(Selected, idx)
-                        Item.TextColor3 = Color3.fromRGB(180, 180, 180)
+                        ItemLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
                     else
                         table.insert(Selected, v)
-                        Item.TextColor3 = Color3.fromRGB(100, 255, 100)
+                        ItemLbl.TextColor3 = Color3.fromRGB(100, 255, 100)
                     end
                     updateText()
+                    if Options.Flag then Window.Flags[Options.Flag] = Selected end
                     if Options.Callback then Options.Callback(Selected) end
                 end)
             end
@@ -1010,7 +1337,7 @@ function InconUI:CreateWindow(Options)
                 hint.Size = UDim2.new(0, 150, 0, HINT_H)
                 hint.BackgroundTransparency = 1
                 hint.Font = Enum.Font.Code
-                hint.Text = "▼ Click to expand"
+                hint.Text = "▼ Click To Expand"
                 hint.TextColor3 = COL.hint
                 hint.TextSize = 10
                 hint.TextXAlignment = Enum.TextXAlignment.Right
@@ -1051,7 +1378,7 @@ function InconUI:CreateWindow(Options)
                     end
                     local goal = UDim2.new(1, -6, 0, cardHeight(sumLines, #lines, true))
                     TS:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = goal}):Play()
-                    hint.Text = expanded and "▲ Click to collapse" or "▼ Click to expand"
+                    hint.Text = expanded and "▲ Click To Collapse" or "▼ Click To Expand"
                 end
 
                 card.MouseButton1Click:Connect(toggleExpand)
@@ -1061,6 +1388,123 @@ function InconUI:CreateWindow(Options)
         return Tab
     end
 
+    function Window:BuildSaveManager(TargetTab)
+        TargetTab:CreateSection("Configuration")
+        
+        local ConfigBox = TargetTab:CreateTextbox({
+            Name = "Config Name",
+            Placeholder = "Enter Name..."
+        })
+
+        local ConfigList = TargetTab:CreateDropdown({
+            Name = "Config List",
+            List = Window:GetConfigs(),
+            Callback = function(val) 
+                ConfigBox:SetText(val)
+            end
+        })
+
+        TargetTab:CreateDualButton({
+            Name1 = "Create Config",
+            Callback1 = function()
+                local ConfigName = ConfigBox:GetText()
+                if ConfigName == "" then
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Please Enter A Config Name!", Time = 3})
+                    return
+                end
+                Window:SaveConfig(ConfigName)
+                ConfigList:Refresh(Window:GetConfigs())
+                InconUI:MakeNotify({Title = "Config Manager", Content = "Created Config " .. ConfigName, Time = 3})
+            end,
+            Name2 = "Load Config",
+            Callback2 = function()
+                local ConfigName = ConfigBox:GetText()
+                if ConfigName == "" then
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Please Select Or Enter A Config!", Time = 3})
+                    return
+                end
+                if Window:LoadConfig(ConfigName) then
+                    InconUI:MakeNotify({Title = "Config Manager", Content = "Loaded Config " .. ConfigName, Time = 3})
+                else
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Config Not Found!", Time = 3})
+                end
+            end
+        })
+
+        TargetTab:CreateDualButton({
+            Name1 = "Overwrite Config",
+            Callback1 = function()
+                local ConfigName = ConfigBox:GetText()
+                if ConfigName == "" then
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Please Select Or Enter A Config!", Time = 3})
+                    return
+                end
+                Window:SaveConfig(ConfigName)
+                InconUI:MakeNotify({Title = "Config Manager", Content = "Overwrote Config " .. ConfigName, Time = 3})
+            end,
+            Name2 = "Delete Config",
+            Callback2 = function()
+                local ConfigName = ConfigBox:GetText()
+                if ConfigName == "" then
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Please Select Or Enter A Config!", Time = 3})
+                    return
+                end
+                if Window:DeleteConfig(ConfigName) then
+                    ConfigList:Refresh(Window:GetConfigs())
+                    ConfigList:SetTitle("None")
+                    ConfigBox:SetText("")
+                    InconUI:MakeNotify({Title = "Config Manager", Content = "Deleted Config " .. ConfigName, Time = 3})
+                    local currentAuto = Window:GetAutoload()
+                    if currentAuto == ConfigName then
+                        Window:ClearAutoload()
+                    end
+                else
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Config Not Found!", Time = 3})
+                end
+            end
+        })
+
+        TargetTab:CreateButton({
+            Name = "Refresh List",
+            Callback = function()
+                ConfigList:Refresh(Window:GetConfigs())
+                InconUI:MakeNotify({Title = "Config Manager", Content = "List Refreshed!", Time = 3})
+            end
+        })
+
+        local autoLbl = TargetTab:CreateLabel({Name = "Current Autoload: None"})
+
+        TargetTab:CreateDualButton({
+            Name1 = "Set As Autoload",
+            Callback1 = function()
+                local ConfigName = ConfigBox:GetText()
+                if ConfigName == "" then
+                    InconUI:MakeNotify({Title = "Config Error", Content = "Please Select Or Enter A Config!", Time = 3})
+                    return
+                end
+                Window:SetAutoload(ConfigName)
+                autoLbl:SetText("Current Autoload: " .. ConfigName)
+                InconUI:MakeNotify({Title = "Config Manager", Content = "Set " .. ConfigName .. " To Autoload", Time = 3})
+            end,
+            Name2 = "Clear Autoload",
+            Callback2 = function()
+                local currentAuto = Window:GetAutoload()
+                if not currentAuto or currentAuto == "" then
+                    InconUI:MakeNotify({Title = "Config Error", Content = "No Autoload Config To Clear!", Time = 3})
+                    return
+                end
+                Window:ClearAutoload()
+                autoLbl:SetText("Current Autoload: None")
+                InconUI:MakeNotify({Title = "Config Manager", Content = "Cleared Autoload Config", Time = 3})
+            end
+        })
+        
+        local currentAuto = Window:GetAutoload()
+        if currentAuto and currentAuto ~= "" then
+            autoLbl:SetText("Current Autoload: " .. currentAuto)
+        end
+    end
+
     function Window:Destroy()
         for _, con in ipairs(Window.Connections) do
             pcall(function() con:Disconnect() end)
@@ -1068,6 +1512,8 @@ function InconUI:CreateWindow(Options)
         Window.Connections = {}
         Window.Pages = {}
         Window.CurrentPage = nil
+        Window.Flags = {}
+        Window.Elements = {}
         if ScreenGui and ScreenGui.Parent then
             ScreenGui:Destroy()
         end
