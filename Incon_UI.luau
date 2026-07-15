@@ -137,6 +137,43 @@ function InconUI:CreateWindow(Options)
         if gui.Name == "InconUI_Hub" or gui.Name == "InconUI_WM" or gui.Name == "InconUI_CP" then gui:Destroy() end
     end
 
+    local function AddDragLogic(frame, dragHandle)
+        dragHandle = dragHandle or frame
+        local dragToggle = nil
+        local dragSpeed = 0.25
+        local dragStart = nil
+        local startPos = nil
+
+        local function updateInput(input)
+            local delta = input.Position - dragStart
+            local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            TS:Create(frame, TweenInfo.new(dragSpeed), {Position = position}):Play()
+        end
+
+        table.insert(InconUI.Connections, dragHandle.InputBegan:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                dragToggle = true
+                dragStart = input.Position
+                startPos = frame.Position
+                local changeCon
+                changeCon = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragToggle = false
+                        if changeCon then changeCon:Disconnect() end
+                    end
+                end)
+            end
+        end))
+
+        table.insert(InconUI.Connections, UIS.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragToggle then
+                    updateInput(input)
+                end
+            end
+        end))
+    end
+
     function Window:InitFolder()
         if isfolder and makefolder then
             if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
@@ -181,7 +218,7 @@ function InconUI:CreateWindow(Options)
     ScreenGui.IgnoreGuiInset = true
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = ParentUI
-    table.insert(self.Hubs, ScreenGui)
+    table.insert(InconUI.Hubs, ScreenGui)
 
     local WMGui = Instance.new("ScreenGui")
     WMGui.Name = "InconUI_WM"
@@ -189,7 +226,7 @@ function InconUI:CreateWindow(Options)
     WMGui.IgnoreGuiInset = true
     WMGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     WMGui.Parent = ParentUI
-    table.insert(self.Hubs, WMGui)
+    table.insert(InconUI.Hubs, WMGui)
 
     local CPGui = Instance.new("ScreenGui")
     CPGui.Name = "InconUI_CP"
@@ -197,7 +234,7 @@ function InconUI:CreateWindow(Options)
     CPGui.IgnoreGuiInset = true
     CPGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     CPGui.Parent = ParentUI
-    table.insert(self.Hubs, CPGui)
+    table.insert(InconUI.Hubs, CPGui)
 
     local WMFrame = Instance.new("Frame")
     WMFrame.Size = UDim2.new(0, 0, 0, 25)
@@ -219,7 +256,7 @@ function InconUI:CreateWindow(Options)
     WMTxt.AutomaticSize = Enum.AutomaticSize.X
     WMTxt.BackgroundTransparency = 1
     WMTxt.TextColor3 = Color3.fromRGB(220, 220, 220)
-    WMTxt.FontFace = self.CurrentFont
+    WMTxt.FontFace = InconUI.CurrentFont
     WMTxt.TextSize = 12
     WMTxt.Parent = WMFrame
 
@@ -233,41 +270,9 @@ function InconUI:CreateWindow(Options)
             lastTime = tick()
         end
     end)
-    table.insert(self.Connections, wmCon)
-
-    local wmDragToggle = nil
-    local wmDragSpeed = 0.25
-    local wmDragStart = nil
-    local wmStartPos = nil
-
-    local function updateWMInput(input)
-        local delta = input.Position - wmDragStart
-        local position = UDim2.new(wmStartPos.X.Scale, wmStartPos.X.Offset + delta.X, wmStartPos.Y.Scale, wmStartPos.Y.Offset + delta.Y)
-        TS:Create(WMFrame, TweenInfo.new(wmDragSpeed), {Position = position}):Play()
-    end
-
-    table.insert(self.Connections, WMFrame.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-            wmDragToggle = true
-            wmDragStart = input.Position
-            wmStartPos = WMFrame.Position
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    wmDragToggle = false
-                    if changeCon then changeCon:Disconnect() end
-                end
-            end)
-        end
-    end))
-
-    table.insert(self.Connections, UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if wmDragToggle then
-                updateWMInput(input)
-            end
-        end
-    end))
+    table.insert(InconUI.Connections, wmCon)
+    
+    AddDragLogic(WMFrame, WMFrame)
 
     local MasterFrame = Instance.new("Frame")
     MasterFrame.Name = "MasterFrame"
@@ -305,46 +310,32 @@ function InconUI:CreateWindow(Options)
         end
     end
 
-    local flDragToggle = nil
-    local flDragSpeed = 0.25
-    local flDragStart = nil
-    local flStartPos = nil
-    local flClickTime = nil
-    local flStartMouse = nil
-
-    local function updateFloatInput(input)
-        local delta = input.Position - flDragStart
-        local position = UDim2.new(flStartPos.X.Scale, flStartPos.X.Offset + delta.X, flStartPos.Y.Scale, flStartPos.Y.Offset + delta.Y)
-        TS:Create(FloatBtn, TweenInfo.new(flDragSpeed), {Position = position}):Play()
-    end
-
-    table.insert(self.Connections, FloatBtn.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-            flDragToggle = true
+    local flDragStart, flStartPos, flDragging, flClickTime, flStartMouse
+    table.insert(InconUI.Connections, FloatBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            flDragging = true
             flDragStart = input.Position
             flStartPos = FloatBtn.Position
             flClickTime = tick()
             flStartMouse = input.Position
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    flDragToggle = false
-                    if changeCon then changeCon:Disconnect() end
-                    if tick() - flClickTime < 0.3 and (input.Position - flStartMouse).Magnitude < 5 then
-                        Window.IsMinimized = false
-                        ToggleUIVisibility(FloatBtn, FloatScale, false)
-                        ToggleUIVisibility(MasterFrame, MasterScale, true)
-                    end
-                end
-            end)
         end
     end))
-
-    table.insert(self.Connections, UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if flDragToggle then
-                updateFloatInput(input)
+    table.insert(InconUI.Connections, UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if flDragging then
+                flDragging = false
+                if tick() - flClickTime < 0.3 and (input.Position - flStartMouse).Magnitude < 5 then
+                    Window.IsMinimized = false
+                    ToggleUIVisibility(FloatBtn, FloatScale, false)
+                    ToggleUIVisibility(MasterFrame, MasterScale, true)
+                end
             end
+        end
+    end))
+    table.insert(InconUI.Connections, UIS.InputChanged:Connect(function(input)
+        if flDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - flDragStart
+            FloatBtn.Position = UDim2.new(flStartPos.X.Scale, flStartPos.X.Offset + delta.X, flStartPos.Y.Scale, flStartPos.Y.Offset + delta.Y)
         end
     end))
 
@@ -373,43 +364,11 @@ function InconUI:CreateWindow(Options)
     KeyTitle.Text = Options.KeySettings and Options.KeySettings.Title or "Key System"
     KeyTitle.TextColor3 = Color3.fromRGB(181, 181, 181)
     KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
-    KeyTitle.FontFace = self.CurrentFont
+    KeyTitle.FontFace = InconUI.CurrentFont
     KeyTitle.TextSize = 12
     KeyTitle.Parent = KeyTopBar
 
-    local kDragToggle = nil
-    local kDragSpeed = 0.25
-    local kDragStart = nil
-    local kStartPos = nil
-
-    local function updateKeyInput(input)
-        local delta = input.Position - kDragStart
-        local position = UDim2.new(kStartPos.X.Scale, kStartPos.X.Offset + delta.X, kStartPos.Y.Scale, kStartPos.Y.Offset + delta.Y)
-        TS:Create(KeyFrame, TweenInfo.new(kDragSpeed), {Position = position}):Play()
-    end
-
-    table.insert(self.Connections, KeyTopBar.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-            kDragToggle = true
-            kDragStart = input.Position
-            kStartPos = KeyFrame.Position
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    kDragToggle = false
-                    if changeCon then changeCon:Disconnect() end
-                end
-            end)
-        end
-    end))
-
-    table.insert(self.Connections, UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if kDragToggle then
-                updateKeyInput(input)
-            end
-        end
-    end))
+    AddDragLogic(KeyFrame, KeyTopBar)
 
     local KeyInputContainer = Instance.new("Frame")
     KeyInputContainer.Size = UDim2.new(1, -20, 0, 40)
@@ -425,7 +384,7 @@ function InconUI:CreateWindow(Options)
     KeyInput.TextColor3 = Color3.fromRGB(200, 200, 200)
     KeyInput.PlaceholderText = "Enter Key..."
     KeyInput.Text = ""
-    KeyInput.FontFace = self.CurrentFont
+    KeyInput.FontFace = InconUI.CurrentFont
     KeyInput.TextSize = 12
     KeyInput.TextXAlignment = Enum.TextXAlignment.Left
     KeyInput.Parent = KeyInputContainer
@@ -437,7 +396,7 @@ function InconUI:CreateWindow(Options)
     KeySubmit.BorderColor3 = Color3.fromRGB(51, 51, 51)
     KeySubmit.TextColor3 = Color3.fromRGB(201, 201, 201)
     KeySubmit.Text = "Submit Key"
-    KeySubmit.FontFace = self.CurrentFont
+    KeySubmit.FontFace = InconUI.CurrentFont
     KeySubmit.TextSize = 12
     KeySubmit.Parent = KeyFrame
 
@@ -448,17 +407,17 @@ function InconUI:CreateWindow(Options)
     KeyGet.BorderColor3 = Color3.fromRGB(51, 51, 51)
     KeyGet.TextColor3 = Color3.fromRGB(201, 201, 201)
     KeyGet.Text = "Get Key"
-    KeyGet.FontFace = self.CurrentFont
+    KeyGet.FontFace = InconUI.CurrentFont
     KeyGet.TextSize = 12
     KeyGet.Parent = KeyFrame
 
-    table.insert(self.Connections, KeyGet.MouseButton1Click:Connect(function()
+    table.insert(InconUI.Connections, KeyGet.MouseButton1Click:Connect(function()
         local link = Options.KeySettings and Options.KeySettings.Link or ""
         if setclipboard then setclipboard(link) end
-        self:MakeNotify({Title = "Key System", Content = "Copied Link To Clipboard!", Time = 3})
+        InconUI:MakeNotify({Title = "Key System", Content = "Copied Link To Clipboard!", Time = 3})
     end))
 
-    table.insert(self.Connections, KeySubmit.MouseButton1Click:Connect(function()
+    table.insert(InconUI.Connections, KeySubmit.MouseButton1Click:Connect(function()
         local valid = false
         local reqKey = Options.KeySettings and Options.KeySettings.Key or ""
         if type(reqKey) == "table" then
@@ -482,9 +441,9 @@ function InconUI:CreateWindow(Options)
             ToggleUIVisibility(KeyFrame, KeyScale, false)
             ToggleUIVisibility(MasterFrame, MasterScale, true)
             WMFrame.Visible = true
-            self:MakeNotify({Title = "Key System", Content = "Valid Key Entered!", Time = 3})
+            InconUI:MakeNotify({Title = "Key System", Content = "Valid Key Entered!", Time = 3})
         else
-            self:MakeNotify({Title = "Key System", Content = "Invalid Key!", Time = 3})
+            InconUI:MakeNotify({Title = "Key System", Content = "Invalid Key!", Time = 3})
         end
     end))
 
@@ -556,7 +515,7 @@ function InconUI:CreateWindow(Options)
 
     local TopLabel = Instance.new("TextLabel")
     TopLabel.Text = string.format("%s  |  %s Toggle", TitleText, KeyName)
-    TopLabel.FontFace = self.CurrentFont
+    TopLabel.FontFace = InconUI.CurrentFont
     TopLabel.TextSize = 12
     TopLabel.TextColor3 = Color3.fromRGB(181, 181, 181)
     TopLabel.TextXAlignment = Enum.TextXAlignment.Center
@@ -572,11 +531,11 @@ function InconUI:CreateWindow(Options)
     CloseBtn.BackgroundTransparency = 1
     CloseBtn.Text = "X"
     CloseBtn.TextColor3 = Color3.fromRGB(200, 100, 100)
-    CloseBtn.FontFace = self.CurrentFont
+    CloseBtn.FontFace = InconUI.CurrentFont
     CloseBtn.TextSize = 12
     CloseBtn.ZIndex = 12
     CloseBtn.Parent = TopBar
-    table.insert(self.Connections, CloseBtn.MouseButton1Click:Connect(function() self:Destroy() end))
+    table.insert(InconUI.Connections, CloseBtn.MouseButton1Click:Connect(function() InconUI:Destroy() end))
 
     local MinBtn = Instance.new("TextButton")
     MinBtn.Size = UDim2.new(0, 22, 0, 22)
@@ -584,45 +543,33 @@ function InconUI:CreateWindow(Options)
     MinBtn.BackgroundTransparency = 1
     MinBtn.Text = "-"
     MinBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    MinBtn.FontFace = self.CurrentFont
+    MinBtn.FontFace = InconUI.CurrentFont
     MinBtn.TextSize = 14
     MinBtn.ZIndex = 12
     MinBtn.Parent = TopBar
-    table.insert(self.Connections, MinBtn.MouseButton1Click:Connect(function()
+    table.insert(InconUI.Connections, MinBtn.MouseButton1Click:Connect(function()
         Window.IsMinimized = true
         ToggleUIVisibility(MasterFrame, MasterScale, false)
         ToggleUIVisibility(FloatBtn, FloatScale, true)
     end))
 
-    local dragToggle = nil
-    local dragSpeed = 0.25
-    local dragStart = nil
-    local startPos = nil
+    AddDragLogic(MasterFrame, TopBar)
 
-    local function updateInput(input)
-        local delta = input.Position - dragStart
-        local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        TS:Create(MasterFrame, TweenInfo.new(dragSpeed), {Position = position}):Play()
-    end
-
-    table.insert(self.Connections, TopBar.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-            dragToggle = true
-            dragStart = input.Position
-            startPos = MasterFrame.Position
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragToggle = false
-                    if changeCon then changeCon:Disconnect() end
-                end
-            end)
-        end
-    end))
-
-    table.insert(self.Connections, UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if dragToggle then updateInput(input) end
+    table.insert(InconUI.Connections, UIS.InputBegan:Connect(function(input, gp)
+        if not Window.IsUnlocked then return end
+        if not gp and input.KeyCode == BindKey then
+            if MasterFrame.Visible then
+                Window.IsMinimized = true
+                ToggleUIVisibility(MasterFrame, MasterScale, false)
+                ToggleUIVisibility(FloatBtn, FloatScale, true)
+            elseif FloatBtn.Visible then
+                Window.IsMinimized = false
+                ToggleUIVisibility(FloatBtn, FloatScale, false)
+                ToggleUIVisibility(MasterFrame, MasterScale, true)
+            else
+                Window.IsMinimized = false
+                ToggleUIVisibility(MasterFrame, MasterScale, true)
+            end
         end
     end))
 
@@ -639,7 +586,7 @@ function InconUI:CreateWindow(Options)
     ToggleBtn.Parent = MainBg
 
     local isOpen = true
-    table.insert(self.Connections, ToggleBtn.MouseButton1Click:Connect(function()
+    table.insert(InconUI.Connections, ToggleBtn.MouseButton1Click:Connect(function()
         isOpen = not isOpen
         ToggleBtn.Text = isOpen and "<" or ">"
         TS:Create(SideBarContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, isOpen and 0 or -110, 0, 0)}):Play()
@@ -659,7 +606,7 @@ function InconUI:CreateWindow(Options)
     Title.Position = UDim2.new(0, 5, 0, 75)
     Title.BackgroundTransparency = 1
     Title.ZIndex = 4
-    Title.FontFace = self.CurrentFont
+    Title.FontFace = InconUI.CurrentFont
     Title.TextSize = 11
     Title.TextColor3 = Color3.fromRGB(200, 200, 200)
     Title.TextWrapped = true
@@ -674,7 +621,7 @@ function InconUI:CreateWindow(Options)
         local hex = string.format("#%02X%02X%02X", c.R*255, c.G*255, c.B*255)
         Title.Text = 'Welcome <font color="'..hex..'">'..LP.Name..'</font>\nto\n'..TitleText
     end)
-    table.insert(self.Connections, rlCon)
+    table.insert(InconUI.Connections, rlCon)
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Size = UDim2.new(1, 0, 1, -125)
@@ -724,6 +671,8 @@ function InconUI:CreateWindow(Options)
     CPTopDrag.ZIndex = 101
     CPTopDrag.Parent = CPPnl
 
+    AddDragLogic(CPPnl, CPTopDrag)
+
     local CPAccent = Instance.new("Frame")
     CPAccent.Size = UDim2.new(1, 0, 0, 1)
     CPAccent.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
@@ -738,7 +687,7 @@ function InconUI:CreateWindow(Options)
     CPTitle.Text = "Color Picker"
     CPTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
     CPTitle.TextXAlignment = Enum.TextXAlignment.Left
-    CPTitle.FontFace = self.CurrentFont
+    CPTitle.FontFace = InconUI.CurrentFont
     CPTitle.TextSize = 12
     CPTitle.ZIndex = 101
     CPTitle.Parent = CPTopDrag
@@ -749,43 +698,11 @@ function InconUI:CreateWindow(Options)
     CPClose.BackgroundTransparency = 1
     CPClose.Text = "X"
     CPClose.TextColor3 = Color3.fromRGB(200, 100, 100)
-    CPClose.FontFace = self.CurrentFont
+    CPClose.FontFace = InconUI.CurrentFont
     CPClose.TextSize = 12
     CPClose.ZIndex = 101
     CPClose.Parent = CPPnl
-    table.insert(self.Connections, CPClose.MouseButton1Click:Connect(function() ToggleUIVisibility(CPPnl, CPScale, false) end))
-
-    local cpDragToggle = nil
-    local cpDragSpeed = 0.25
-    local cpDragStart = nil
-    local cpStartPos = nil
-
-    local function updateCPInput(input)
-        local delta = input.Position - cpDragStart
-        local position = UDim2.new(cpStartPos.X.Scale, cpStartPos.X.Offset + delta.X, cpStartPos.Y.Scale, cpStartPos.Y.Offset + delta.Y)
-        TS:Create(CPPnl, TweenInfo.new(cpDragSpeed), {Position = position}):Play()
-    end
-
-    table.insert(self.Connections, CPTopDrag.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-            cpDragToggle = true
-            cpDragStart = input.Position
-            cpStartPos = CPPnl.Position
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    cpDragToggle = false
-                    if changeCon then changeCon:Disconnect() end
-                end
-            end)
-        end
-    end))
-
-    table.insert(self.Connections, UIS.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if cpDragToggle then updateCPInput(input) end
-        end
-    end))
+    table.insert(InconUI.Connections, CPClose.MouseButton1Click:Connect(function() ToggleUIVisibility(CPPnl, CPScale, false) end))
 
     local MapFrame = Instance.new("Frame")
     MapFrame.Size = UDim2.new(0, 170, 0, 170)
@@ -859,7 +776,7 @@ function InconUI:CreateWindow(Options)
     HexBox.BorderColor3 = Color3.fromRGB(56, 56, 56)
     HexBox.TextColor3 = Color3.fromRGB(220, 220, 220)
     HexBox.Text = "#FFFFFF"
-    HexBox.FontFace = self.CurrentFont
+    HexBox.FontFace = InconUI.CurrentFont
     HexBox.TextSize = 12
     HexBox.ZIndex = 101
     HexBox.Parent = CPPnl
@@ -871,7 +788,7 @@ function InconUI:CreateWindow(Options)
     RGBBox.BorderColor3 = Color3.fromRGB(56, 56, 56)
     RGBBox.TextColor3 = Color3.fromRGB(220, 220, 220)
     RGBBox.Text = "255, 255, 255"
-    RGBBox.FontFace = self.CurrentFont
+    RGBBox.FontFace = InconUI.CurrentFont
     RGBBox.TextSize = 12
     RGBBox.ZIndex = 101
     RGBBox.Parent = CPPnl
@@ -880,7 +797,7 @@ function InconUI:CreateWindow(Options)
     local CPCallback = nil
     local CPFlag = nil
 
-    local function UpdateCPVisuals()
+    local function UpdateCPVisuals(NoCallback)
         local hc = Color3.fromHSV(CurH, 1, 1)
         MapFrame.BackgroundColor3 = hc
         local fc = Color3.fromHSV(CurH, CurS, CurV)
@@ -888,72 +805,66 @@ function InconUI:CreateWindow(Options)
         HueLine.Position = UDim2.new(0.5, 0, CurH, 0)
         RGBBox.Text = string.format("%d, %d, %d", math.floor(fc.R * 255), math.floor(fc.G * 255), math.floor(fc.B * 255))
         HexBox.Text = string.format("#%02X%02X%02X", math.floor(fc.R * 255), math.floor(fc.G * 255), math.floor(fc.B * 255))
-        if CPFlag then InconUI.Flags[CPFlag] = string.format("%d,%d,%d", math.floor(fc.R*255), math.floor(fc.G*255), math.floor(fc.B*255)) end
-        if CPCallback then CPCallback(fc) end
+        if not NoCallback then
+            if CPFlag then InconUI.Flags[CPFlag] = string.format("%d,%d,%d", math.floor(fc.R*255), math.floor(fc.G*255), math.floor(fc.B*255)) end
+            if CPCallback then CPCallback(fc) end
+        end
     end
 
     local draggingMap, draggingHue = false, false
+    table.insert(InconUI.Connections, UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingMap = false
+            draggingHue = false
+        end
+    end))
 
-    table.insert(self.Connections, MapFrame.InputBegan:Connect(function(input)
+    table.insert(InconUI.Connections, MapFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingMap = true
             CurS = math.clamp((input.Position.X - MapFrame.AbsolutePosition.X) / MapFrame.AbsoluteSize.X, 0, 1)
             CurV = 1 - math.clamp((input.Position.Y - MapFrame.AbsolutePosition.Y) / MapFrame.AbsoluteSize.Y, 0, 1)
-            UpdateCPVisuals()
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    draggingMap = false
-                    if changeCon then changeCon:Disconnect() end
-                end
-            end)
+            UpdateCPVisuals(false)
         end
     end))
 
-    table.insert(self.Connections, HueFrame.InputBegan:Connect(function(input)
+    table.insert(InconUI.Connections, HueFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingHue = true
             CurH = math.clamp((input.Position.Y - HueFrame.AbsolutePosition.Y) / HueFrame.AbsoluteSize.Y, 0, 1)
-            UpdateCPVisuals()
-            local changeCon
-            changeCon = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    draggingHue = false
-                    if changeCon then changeCon:Disconnect() end
-                end
-            end)
+            UpdateCPVisuals(false)
         end
     end))
 
-    table.insert(self.Connections, UIS.InputChanged:Connect(function(input)
+    table.insert(InconUI.Connections, UIS.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if draggingMap then
                 CurS = math.clamp((input.Position.X - MapFrame.AbsolutePosition.X) / MapFrame.AbsoluteSize.X, 0, 1)
                 CurV = 1 - math.clamp((input.Position.Y - MapFrame.AbsolutePosition.Y) / MapFrame.AbsoluteSize.Y, 0, 1)
-                UpdateCPVisuals()
+                UpdateCPVisuals(false)
             elseif draggingHue then
                 CurH = math.clamp((input.Position.Y - HueFrame.AbsolutePosition.Y) / HueFrame.AbsoluteSize.Y, 0, 1)
-                UpdateCPVisuals()
+                UpdateCPVisuals(false)
             end
         end
     end))
 
-    table.insert(self.Connections, RGBBox.FocusLost:Connect(function()
+    table.insert(InconUI.Connections, RGBBox.FocusLost:Connect(function()
         local sp = string.split(RGBBox.Text:gsub(" ", ""), ",")
         if #sp == 3 then
             local r, g, b = tonumber(sp[1]), tonumber(sp[2]), tonumber(sp[3])
             if r and g and b then
-                CurH, CurS, CurV = Color3.fromRGB(r, g, b):ToHSV()
-                UpdateCPVisuals()
+                CurH, CurS, CurV = Color3.fromRGB(math.clamp(r, 0, 255), math.clamp(g, 0, 255), math.clamp(b, 0, 255)):ToHSV()
+                UpdateCPVisuals(false)
             end
         end
     end))
 
-    table.insert(self.Connections, HexBox.FocusLost:Connect(function()
+    table.insert(InconUI.Connections, HexBox.FocusLost:Connect(function()
         local s, c = pcall(function() return Color3.fromHex(HexBox.Text) end)
         if s and c then
             CurH, CurS, CurV = c:ToHSV()
-            UpdateCPVisuals()
+            UpdateCPVisuals(false)
         end
     end))
 
@@ -1545,6 +1456,10 @@ function InconUI:CreateWindow(Options)
                                 ColorVal = Color3.fromRGB(r, g, b)
                                 DisplayColor.BackgroundColor3 = ColorVal
                                 InconUI.Flags[ElmOptions.Flag] = val
+                                if CPFlag == ElmOptions.Flag then
+                                    CurH, CurS, CurV = ColorVal:ToHSV()
+                                    UpdateCPVisuals(true)
+                                end
                                 if ElmOptions.Callback then ElmOptions.Callback(ColorVal) end
                             end
                         end
@@ -1555,7 +1470,7 @@ function InconUI:CreateWindow(Options)
             table.insert(InconUI.Connections, Btn.MouseButton1Click:Connect(function()
                 CPTitle.Text = ElmOptions.Name or "Color Picker"
                 CurH, CurS, CurV = ColorVal:ToHSV()
-                UpdateCPVisuals()
+                CPFlag = ElmOptions.Flag
                 CPCallback = function(newCol)
                     ColorVal = newCol
                     DisplayColor.BackgroundColor3 = ColorVal
@@ -1564,7 +1479,7 @@ function InconUI:CreateWindow(Options)
                     end
                     if ElmOptions.Callback then ElmOptions.Callback(ColorVal) end
                 end
-                CPFlag = ElmOptions.Flag
+                UpdateCPVisuals(true)
                 ToggleUIVisibility(CPPnl, CPScale, true)
             end))
         end
@@ -2022,7 +1937,8 @@ function InconUI:CreateWindow(Options)
             local IS_TOUCH = UIS.TouchEnabled and not UIS.MouseEnabled
 
             local function measureText(text, availW)
-                return TSvc:GetTextSize(text, 11, Enum.Font.Code, Vector2.new(availW, math.huge))
+                local txtSvc = game:GetService("TextService")
+                return txtSvc:GetTextSize(text, 11, Enum.Font.Code, Vector2.new(availW, math.huge))
             end
 
             local function cardHeight(sumLines, n, canExpand)
