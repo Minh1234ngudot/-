@@ -283,9 +283,6 @@ function InconUI:CreateWindow(Options)
     MasterFrame.Visible = false
     MasterFrame.Parent = ScreenGui
 
-    local MasterScale = Instance.new("UIScale", MasterFrame)
-    MasterScale.Scale = 1
-
     local FloatBtn = Instance.new("ImageButton")
     FloatBtn.Size = UDim2.new(0, 40, 0, 40)
     FloatBtn.Position = UDim2.new(0.5, -20, 0.1, 0)
@@ -1413,7 +1410,7 @@ function InconUI:CreateWindow(Options)
                         if #sp == 3 then
                             local r, g, b = tonumber(sp[1]), tonumber(sp[2]), tonumber(sp[3])
                             if r and g and b then
-                                ColorVal = Color3.fromRGB(r, g, b)
+                                ColorVal = Color3.fromRGB(math.clamp(r, 0, 255), math.clamp(g, 0, 255), math.clamp(b, 0, 255))
                                 DisplayColor.BackgroundColor3 = ColorVal
                                 InconUI.Flags[ElmOptions.Flag] = val
                                 if CPFlag == ElmOptions.Flag then
@@ -1440,7 +1437,7 @@ function InconUI:CreateWindow(Options)
                     if ElmOptions.Callback then ElmOptions.Callback(ColorVal) end
                 end
                 UpdateCPVisuals(true)
-                ToggleUIVisibility(CPPnl, CPScale, true)
+                CPPnl.Visible = true
             end))
         end
 
