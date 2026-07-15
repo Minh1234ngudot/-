@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌌 Incon UI Library
+# 🌌 Incon Premium UI Library
 
 [![Lua](https://img.shields.io/badge/Language-Lua-blue.svg?style=for-the-badge&logo=lua)](https://www.lua.org/)
 [![Roblox](https://img.shields.io/badge/Game-Roblox-red.svg?style=for-the-badge&logo=roblox)](https://www.roblox.com/)
@@ -9,87 +9,84 @@
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Inconsolata&weight=600&size=24&pause=1000&color=00FF99&center=true&vCenter=true&width=435&lines=Premium+Roblox+UI+Library;Built-In+Save+Manager;Zero+Sub-Pixel+Tearing;Highly+Optimized" alt="Typing SVG" />
 
-A modern, highly optimized, and bug-free Roblox UI Library designed for exploit scripts. Featuring a clean dark theme, smooth tweens, built-in config saving, and **0% sub-pixel rendering issues**.
+A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit Scripts. Featuring A Clean Dark Theme, Smooth Tweens, Built-In Config Saving, Draggable Elements, And A Secure Key System.
 
 </div>
 
 ---
 
-### 🚀 Booting The Library
+### 🚀 Booting The Library & Setting Fonts
 
-Load the UI Library using the raw GitHub URL.
+Load The UI Library Using The Raw GitHub URL And Set Your Custom Font.
 
 ```lua
 local InconUI = loadstring(game:HttpGet("[https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau](https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau)"))()
 
+InconUI:SetFont("rbxassetid://12187365364")
+
 ```
 
-### 🪟 Creating A Window
+### 🪟 Creating A Window (With Key System)
 
-Initialize your main hub interface. You can set the title, toggle key, and the folder name where configurations will be saved.
+Initialize Your Main Hub Interface. You Can Set The Title, Toggle Key (Alphabetical), Configuration Folder, And Enable The Secure Key System With Auto-Save Expiration.
 
 ```lua
 local Window = InconUI:CreateWindow({
     Name = "Incon Premium Hub",
-    ToggleKey = Enum.KeyCode.RightControl,
-    Folder = "InconConfigs"
+    ToggleUIKeybind = "M",
+    Folder = "InconConfigs",
+    HasKeySystem = true,
+    KeySettings = {
+        Title = "Incon Premium Key System",
+        Key = {"BetaIncon123", "AdminKey"},
+        Link = "[https://discord.gg/yourlink](https://discord.gg/yourlink)",
+        SaveKey = true,
+        MaxTime = 86400
+    }
 })
 
 ```
 
-### 📑 Creating A Tab
+### 📑 Creating Tabs & Sections
 
-Create tabs to organize your features.
+Create Tabs To Organize Your Features And Divide Them Into Neat Sections.
 
 ```lua
 local MainTab = Window:CreateTab("Main Settings")
 
-```
-
-### 📌 Creating A Section
-
-Divide your tab into neat sections.
-
-```lua
-MainTab:CreateSection("Player Settings")
+MainTab:CreateSection("VIP Features")
 
 ```
 
-### 🔘 Creating A Button
+### 🔒 Premium Locked Logic
 
-Execute a function when clicked.
+Add `Locked = true` And `LockedTitle` To Any Element To Lock It. Consecutive Locked Elements Will Automatically Group Into A Beautiful Overlay.
 
 ```lua
 MainTab:CreateButton({
-    Name = "Kill All",
-    Callback = function()
-        print("Kill All Executed!")
+    Name = "Premium Fly",
+    Locked = true,
+    LockedTitle = "Requires VIP Pass",
+    Callback = function() 
+        print("[InconUI] Premium Fly Activated!")
     end
 })
 
 ```
 
-### 🎚️ Creating A Toggle
+### 🔘 Creating Standard Elements
 
-A switch to turn features on or off. Use `Flag` to save its state in the Config Manager.
+Execute Functions, Toggle States, And Adjust Numerical Values Smoothly.
 
 ```lua
 MainTab:CreateToggle({
-    Name = "Auto Farm",
-    Flag = "AutoFarm_Toggle",
+    Name = "God Mode",
+    Flag = "GodMode_Toggle",
     Default = false,
-    Callback = function(State)
-        print("Auto Farm: ", State)
+    Callback = function(State) 
     end
 })
 
-```
-
-### ➖ Creating A Slider
-
-Adjust numerical values smoothly. Includes a manual text input feature.
-
-```lua
 MainTab:CreateSlider({
     Name = "Walk Speed",
     Flag = "WS_Slider",
@@ -97,15 +94,29 @@ MainTab:CreateSlider({
     Max = 250,
     Default = 16,
     Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
     end
 })
 
 ```
 
-### 📝 Creating A Textbox
+### 🎨 Creating A Color Picker
 
-Input text directly into the UI. Retrieves values live.
+A Highly Advanced Draggable Color Picker Popup With Live Hex And RGB Inputs.
+
+```lua
+MainTab:CreateColorPicker({
+    Name = "ESP Color",
+    Flag = "ESP_Color",
+    Default = Color3.fromRGB(0, 255, 150),
+    Callback = function(Value)
+    end
+})
+
+```
+
+### 📝 Creating Textboxes & Keybinds
+
+Input Text Directly Or Assign Quick Hotkeys.
 
 ```lua
 MainTab:CreateTextbox({
@@ -113,31 +124,22 @@ MainTab:CreateTextbox({
     Flag = "Target_Textbox",
     Placeholder = "Enter Name Here...",
     Callback = function(Text)
-        print("Targetting: ", Text)
     end
 })
 
-```
-
-### ⌨️ Creating A Keybind
-
-Assign a quick hotkey. Users can click to rebind it dynamically.
-
-```lua
 MainTab:CreateKeybind({
     Name = "Invisible Key",
     Flag = "Invis_Keybind",
     Default = Enum.KeyCode.T,
     Callback = function()
-        print("Invisible Activated!")
     end
 })
 
 ```
 
-### 🔽 Creating A Dropdown
+### 🔽 Creating Dropdowns
 
-Select a single option from a list.
+Select Single Or Multiple Options Flawlessly.
 
 ```lua
 MainTab:CreateDropdown({
@@ -145,24 +147,15 @@ MainTab:CreateDropdown({
     Flag = "Aimbot_Dropdown",
     List = {"Legit", "Rage", "Blatant"},
     Callback = function(Value)
-        print("Mode Switched To: ", Value)
     end
 })
 
-```
-
-### ✔️ Creating A Multi-Dropdown
-
-Select multiple options at once. Returns a table of selected items.
-
-```lua
 MainTab:CreateMultiDropdown({
     Name = "Auto Weapons",
     Flag = "Weapons_MultiDrop",
     List = {"Sword", "Gun M4A1", "Bow", "Magic Staff"},
     Default = {"Sword"},
     Callback = function(SelectedItems)
-        print("Equipped: ", table.concat(SelectedItems, ", "))
     end
 })
 
@@ -170,7 +163,7 @@ MainTab:CreateMultiDropdown({
 
 ### 🔔 Using Notifications
 
-Trigger a smooth pop-up notification at the bottom right.
+Trigger A Smooth Pop-Up Notification At The Bottom Right.
 
 ```lua
 InconUI:MakeNotify({
@@ -183,18 +176,17 @@ InconUI:MakeNotify({
 
 ### 📜 Creating Update Logs
 
-Show off your recent updates in a sleek, expandable card.
+Show Off Your Recent Updates In A Sleek, Expandable Card.
 
 ```lua
 MainTab:CreateUpdateLog({
-    ver = "v3.1.0",
-    date = "14/07/2026",
+    ver = "v12.0.0 (THE OMEGA PATCH)",
+    date = "15/07/2026",
     expandable = true,
     changes = {
-        {"+", "Added Robust Error Handling For Config Manager."},
-        {"+", "Textboxes Now Retrieve Values Live."},
-        {"~", "Capitalized First Letters Across All UI Prompts."},
-        {"-", "Fixed 100% Sub-Pixel Rendering UI Tear Bugs."}
+        {"+", "ColorPicker Now Syncs Beautifully On Config Load."},
+        {"+", "Update Log Text Dimension Scaling Remade."},
+        {"~", "M Toggle And Key System Interactions Secured."}
     }
 })
 
@@ -202,7 +194,7 @@ MainTab:CreateUpdateLog({
 
 ### ⚙️ Building The Config Manager
 
-Automatically generate a fully functional Configuration interface (Save, Load, Overwrite, Delete, AutoLoad).
+Automatically Generate A Fully Functional Configuration Interface (Save, Load, Overwrite, Delete, AutoLoad).
 
 ```lua
 local ConfigTab = Window:CreateTab("Settings")
@@ -214,7 +206,14 @@ Window:AutoLoad()
 
 ### 🗑️ Destroying The Interface
 
-Safely remove the UI and disconnect all events to prevent memory leaks.
+Safely Remove The UI, Floating Buttons, Watermarks, And Disconnect All Event Connections To Prevent Memory Leaks.
 
 ```lua
-Window:Destroy()
+MainTab:CreateButton({
+    Name = "Destroy UI",
+    Callback = function()
+        InconUI:Destroy()
+    end
+})`
+
+```
