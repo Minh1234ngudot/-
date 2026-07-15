@@ -295,48 +295,13 @@ function InconUI:CreateWindow(Options)
     FloatBtn.Visible = false
     FloatBtn.Parent = ScreenGui
     Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(0, 8)
-    local FloatScale = Instance.new("UIScale", FloatBtn)
-    FloatScale.Scale = 1
 
-    local function ToggleUIVisibility(element, scaleObj, state)
-        if state then
-            element.Visible = true
-            scaleObj.Scale = 0.85
-            TS:Create(scaleObj, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Scale = 1}):Play()
-        else
-            local tw = TS:Create(scaleObj, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Scale = 0.85})
-            tw:Play()
-            task.delay(0.2, function() element.Visible = false end)
-        end
-    end
+    AddDragLogic(FloatBtn, FloatBtn)
 
-    local flDragStart, flStartPos, flDragging, flClickTime, flStartMouse
-    table.insert(InconUI.Connections, FloatBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            flDragging = true
-            flDragStart = input.Position
-            flStartPos = FloatBtn.Position
-            flClickTime = tick()
-            flStartMouse = input.Position
-        end
-    end))
-    table.insert(InconUI.Connections, UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if flDragging then
-                flDragging = false
-                if tick() - flClickTime < 0.3 and (input.Position - flStartMouse).Magnitude < 5 then
-                    Window.IsMinimized = false
-                    ToggleUIVisibility(FloatBtn, FloatScale, false)
-                    ToggleUIVisibility(MasterFrame, MasterScale, true)
-                end
-            end
-        end
-    end))
-    table.insert(InconUI.Connections, UIS.InputChanged:Connect(function(input)
-        if flDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - flDragStart
-            FloatBtn.Position = UDim2.new(flStartPos.X.Scale, flStartPos.X.Offset + delta.X, flStartPos.Y.Scale, flStartPos.Y.Offset + delta.Y)
-        end
+    table.insert(InconUI.Connections, FloatBtn.MouseButton1Click:Connect(function()
+        FloatBtn.Visible = false
+        MasterFrame.Visible = true
+        Window.IsMinimized = false
     end))
 
     local KeyFrame = Instance.new("Frame")
@@ -347,9 +312,6 @@ function InconUI:CreateWindow(Options)
     KeyFrame.BorderSizePixel = 1
     KeyFrame.Visible = false
     KeyFrame.Parent = ScreenGui
-
-    local KeyScale = Instance.new("UIScale", KeyFrame)
-    KeyScale.Scale = 1
 
     local KeyTopBar = Instance.new("Frame")
     KeyTopBar.Size = UDim2.new(1, 0, 0, 22)
@@ -438,8 +400,8 @@ function InconUI:CreateWindow(Options)
                 writefile(KeySavePath, data)
             end
             Window.IsUnlocked = true
-            ToggleUIVisibility(KeyFrame, KeyScale, false)
-            ToggleUIVisibility(MasterFrame, MasterScale, true)
+            KeyFrame.Visible = false
+            MasterFrame.Visible = true
             WMFrame.Visible = true
             InconUI:MakeNotify({Title = "Key System", Content = "Valid Key Entered!", Time = 3})
         else
@@ -448,9 +410,9 @@ function InconUI:CreateWindow(Options)
     end))
 
     if Options.HasKeySystem and not Window.IsUnlocked then
-        ToggleUIVisibility(KeyFrame, KeyScale, true)
+        KeyFrame.Visible = true
     elseif Window.IsUnlocked then
-        ToggleUIVisibility(MasterFrame, MasterScale, true)
+        MasterFrame.Visible = true
     end
 
     local SideBarContainer = Instance.new("Frame")
@@ -548,9 +510,9 @@ function InconUI:CreateWindow(Options)
     MinBtn.ZIndex = 12
     MinBtn.Parent = TopBar
     table.insert(InconUI.Connections, MinBtn.MouseButton1Click:Connect(function()
+        MasterFrame.Visible = false
+        FloatBtn.Visible = true
         Window.IsMinimized = true
-        ToggleUIVisibility(MasterFrame, MasterScale, false)
-        ToggleUIVisibility(FloatBtn, FloatScale, true)
     end))
 
     AddDragLogic(MasterFrame, TopBar)
@@ -559,16 +521,16 @@ function InconUI:CreateWindow(Options)
         if not Window.IsUnlocked then return end
         if not gp and input.KeyCode == BindKey then
             if MasterFrame.Visible then
+                MasterFrame.Visible = false
+                FloatBtn.Visible = true
                 Window.IsMinimized = true
-                ToggleUIVisibility(MasterFrame, MasterScale, false)
-                ToggleUIVisibility(FloatBtn, FloatScale, true)
             elseif FloatBtn.Visible then
+                FloatBtn.Visible = false
+                MasterFrame.Visible = true
                 Window.IsMinimized = false
-                ToggleUIVisibility(FloatBtn, FloatScale, false)
-                ToggleUIVisibility(MasterFrame, MasterScale, true)
             else
+                MasterFrame.Visible = true
                 Window.IsMinimized = false
-                ToggleUIVisibility(MasterFrame, MasterScale, true)
             end
         end
     end))
@@ -580,7 +542,7 @@ function InconUI:CreateWindow(Options)
     ToggleBtn.BackgroundTransparency = 1
     ToggleBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
     ToggleBtn.Text = "<"
-    ToggleBtn.Font = Enum.Font.Code
+    ToggleBtn.FontFace = InconUI.CurrentFont
     ToggleBtn.TextSize = 16
     ToggleBtn.ZIndex = 13
     ToggleBtn.Parent = MainBg
@@ -660,8 +622,6 @@ function InconUI:CreateWindow(Options)
     CPPnl.Visible = false
     CPPnl.ZIndex = 100
     CPPnl.Parent = CPGui
-    local CPScale = Instance.new("UIScale", CPPnl)
-    CPScale.Scale = 1
     
     local CPTopDrag = Instance.new("TextButton")
     CPTopDrag.Size = UDim2.new(1, -30, 0, 25)
@@ -702,7 +662,7 @@ function InconUI:CreateWindow(Options)
     CPClose.TextSize = 12
     CPClose.ZIndex = 101
     CPClose.Parent = CPPnl
-    table.insert(InconUI.Connections, CPClose.MouseButton1Click:Connect(function() ToggleUIVisibility(CPPnl, CPScale, false) end))
+    table.insert(InconUI.Connections, CPClose.MouseButton1Click:Connect(function() CPPnl.Visible = false end))
 
     local MapFrame = Instance.new("Frame")
     MapFrame.Size = UDim2.new(0, 170, 0, 170)
@@ -1937,8 +1897,18 @@ function InconUI:CreateWindow(Options)
             local IS_TOUCH = UIS.TouchEnabled and not UIS.MouseEnabled
 
             local function measureText(text, availW)
-                local txtSvc = game:GetService("TextService")
-                return txtSvc:GetTextSize(text, 11, Enum.Font.Code, Vector2.new(availW, math.huge))
+                local dummy = Instance.new("TextLabel")
+                dummy.Text = text
+                dummy.FontFace = InconUI.CurrentFont
+                dummy.TextSize = 11
+                dummy.TextWrapped = true
+                dummy.Size = UDim2.new(0, availW, 0, 9999)
+                dummy.BackgroundTransparency = 1
+                dummy.TextTransparency = 1
+                dummy.Parent = TabPage
+                local bounds = dummy.TextBounds
+                dummy:Destroy()
+                return bounds
             end
 
             local function cardHeight(sumLines, n, canExpand)
@@ -1985,7 +1955,7 @@ function InconUI:CreateWindow(Options)
             local header = Instance.new("TextLabel")
             header.BackgroundTransparency = 1
             header.Size = UDim2.new(1, 0, 0, HEADER_H)
-            header.Font = Enum.Font.Code
+            header.FontFace = InconUI.CurrentFont
             header.RichText = true
             header.Text = string.format('<b>%s</b>  <font color="rgb(120,120,120)">%s</font>', entry.ver, entry.date)
             header.TextColor3 = COL.ver
@@ -2001,7 +1971,7 @@ function InconUI:CreateWindow(Options)
                 local lbl = Instance.new("TextLabel")
                 lbl.BackgroundTransparency = 1
                 lbl.Size = UDim2.new(1, 0, 0, LINE_H)
-                lbl.Font = Enum.Font.Code
+                lbl.FontFace = InconUI.CurrentFont
                 lbl.Text = string.format("[%s] %s", kind, desc)
                 lbl.TextColor3 = KIND_COL[kind] or COL.text
                 lbl.TextSize = 11
@@ -2020,7 +1990,7 @@ function InconUI:CreateWindow(Options)
                 hint.Position = UDim2.new(1, -8, 1, -5)
                 hint.Size = UDim2.new(0, 150, 0, HINT_H)
                 hint.BackgroundTransparency = 1
-                hint.Font = Enum.Font.Code
+                hint.FontFace = InconUI.CurrentFont
                 hint.Text = "▼ Click To Expand"
                 hint.TextColor3 = COL.hint
                 hint.TextSize = 10
