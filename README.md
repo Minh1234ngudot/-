@@ -20,7 +20,7 @@ A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit 
 Load The UI Library Using The Raw GitHub URL And Set Your Custom Font.
 
 ```lua
-local InconUI = loadstring(game:HttpGet("[https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau](https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau)"))()
+local InconUI = loadstring(game:HttpGet("https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau"))()
 
 InconUI:SetFont("rbxassetid://12187365364")
 
@@ -43,7 +43,7 @@ local Window = InconUI:CreateWindow({
     KeySettings = {
         Title = "Incon Premium Key System",
         Key = {"BetaIncon123", "AdminKey"},
-        Link = "[https://discord.gg/yourlink](https://discord.gg/yourlink)",
+        Link = "https://discord.gg/yourlink",
         SaveKey = true,
         MaxTime = 86400
     }
