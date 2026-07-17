@@ -7,9 +7,9 @@
 [![Status](https://img.shields.io/badge/Status-Active-success.svg?style=for-the-badge)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)]()
 
-<img src="https://readme-typing-svg.herokuapp.com?font=Inconsolata&weight=600&size=24&pause=1000&color=00FF99&center=true&vCenter=true&width=435&lines=Premium+Roblox+UI+Library;Built-In+Save+Manager;Zero+Sub-Pixel+Tearing;Highly+Optimized" alt="Typing SVG" />
+<img src="https://readme-typing-svg.herokuapp.com?font=Inconsolata&weight=600&size=24&pause=1000&color=00FF99&center=true&vCenter=true&width=435&lines=Premium+Roblox+UI+Library;Built-In+Save+Manager;Secure+Dialog+Modals;Highly+Optimized" alt="Typing SVG" />
 
-A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit Scripts. Featuring A Clean Dark Theme, Smooth Tweens, Built-In Config Saving, Draggable Elements, And A Secure Key System.
+A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit Scripts. Featuring A Clean Dark Theme, Dynamic Texts, Secure Dialog Modals, Draggable Elements, And An Advanced Key System.
 
 </div>
 
@@ -20,21 +20,25 @@ A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit 
 Load The UI Library Using The Raw GitHub URL And Set Your Custom Font.
 
 ```lua
-local InconUI = loadstring(game:HttpGet("https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau"))()
+local InconUI = loadstring(game:HttpGet("[https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau](https://github.com/Minh1234ngudot/-/raw/refs/heads/main/Incon_UI.luau)"))()
 
 InconUI:SetFont("rbxassetid://12187365364")
 
 ```
 
-### 🪟 Creating A Window (With Key System)
+### 🪟 Creating A Window (With Key System, Executor Check & Dynamic Text)
 
-Initialize Your Main Hub Interface. You Can Set The Title, Toggle Key (Alphabetical), Configuration Folder, And Enable The Secure Key System With Auto-Save Expiration.
+Initialize Your Main Hub Interface. You Can Fully Customize The Welcome Text, TopBar Text, Restrict Execution To Specific App Environments, And Enable The Secure Key System.
 
 ```lua
 local Window = InconUI:CreateWindow({
     Name = "Incon Premium Hub",
+    WelcomeTitle = "Welcome",
+    WelcomeName = "Incon Premium Hub",
+    TopBarText = "Incon Premium Hub",
     ToggleUIKeybind = "M",
     Folder = "InconConfigs",
+    SupportedExecutors = {"Krampus", "Wave", "Delta", "Solara", "Hydrogen", "Arceus", "Codex", "MacSploit"},
     HasKeySystem = true,
     KeySettings = {
         Title = "Incon Premium Key System",
@@ -68,8 +72,31 @@ MainTab:CreateButton({
     Locked = true,
     LockedTitle = "Requires VIP Pass",
     Callback = function() 
-        print("[InconUI] Premium Fly Activated!")
     end
+})
+
+```
+
+### ⚠️ Informational Elements (Paragraphs & Styled Labels)
+
+Create Multi-Line Paragraphs That Update Dynamically And Colored Labels For Better UX. Styles: `1 = Basic`, `2 = Warning (Red)`, `3 = Information (Green)`.
+
+```lua
+local InfoPara = MainTab:CreateParagraph({
+    Name = "Auto Farm Status",
+    Content = "Target: None\nGold: 0\nState: Idle"
+})
+
+InfoPara:SetText("Auto Farm Status", "Target: Bandits\nGold: 15,000\nState: Attacking")
+
+MainTab:CreateLabel({
+    Name = "Warning: Do Not Teleport Too Fast!",
+    Style = 2
+})
+
+MainTab:CreateLabel({
+    Name = "Information: Script Loaded Successfully",
+    Style = 3
 })
 
 ```
@@ -101,7 +128,7 @@ MainTab:CreateSlider({
 
 ### 🎨 Creating A Color Picker
 
-A Highly Advanced Draggable Color Picker Popup With Live Hex And RGB Inputs.
+A Highly Advanced Draggable Color Picker Popup With Live Hex And RGB Inputs. Safe Clamping For All Values.
 
 ```lua
 MainTab:CreateColorPicker({
@@ -161,6 +188,30 @@ MainTab:CreateMultiDropdown({
 
 ```
 
+### 💬 Using Confirmation Dialogs
+
+Trigger A Secure Confirmation Popup For Crucial Actions To Prevent Accidental Clicks.
+
+```lua
+MainTab:CreateButton({
+    Name = "Delete Something",
+    Callback = function()
+        Window:CreateDialog({
+            Title = "Warning",
+            Content = "Are You Sure You Want To Proceed?",
+            ConfirmText = "Yes",
+            CancelText = "No",
+            Callback = function(State)
+                if State then
+                    print("Action Confirmed!")
+                end
+            end
+        })
+    end
+})
+
+```
+
 ### 🔔 Using Notifications
 
 Trigger A Smooth Pop-Up Notification At The Bottom Right.
@@ -180,12 +231,13 @@ Show Off Your Recent Updates In A Sleek, Expandable Card.
 
 ```lua
 MainTab:CreateUpdateLog({
-    ver = "v12.0.0 (THE OMEGA PATCH)",
-    date = "15/07/2026",
+    ver = "v18.0.0 (FINAL MASTERPIECE)",
+    date = "17/07/2026",
     expandable = true,
     changes = {
-        {"+", "ColorPicker Now Syncs Beautifully On Config Load."},
-        {"+", "Update Log Text Dimension Scaling Remade."},
+        {"+", "Fully Dynamic TopBar Toggle String Purged Of Hardcoded Text."},
+        {"+", "Added Dialog Modal Popup For Secure Interactions."},
+        {"+", "Implemented Paragraph Object With Dynamic SetText."},
         {"~", "M Toggle And Key System Interactions Secured."}
     }
 })
@@ -194,7 +246,7 @@ MainTab:CreateUpdateLog({
 
 ### ⚙️ Building The Config Manager
 
-Automatically Generate A Fully Functional Configuration Interface (Save, Load, Overwrite, Delete, AutoLoad).
+Automatically Generate A Fully Functional Configuration Interface (Save, Load, Overwrite, Delete, AutoLoad). Overwriting, Deleting And Clearing Autoload Configs Features Built-In Dialog Protection.
 
 ```lua
 local ConfigTab = Window:CreateTab("Settings")
@@ -214,6 +266,4 @@ MainTab:CreateButton({
     Callback = function()
         InconUI:Destroy()
     end
-})`
-
-```
+})
