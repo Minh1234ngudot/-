@@ -9,7 +9,7 @@
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Inconsolata&weight=600&size=24&pause=1000&color=00FF99&center=true&vCenter=true&width=435&lines=Premium+Roblox+UI+Library;Built-In+Save+Manager;Secure+Dialog+Modals;Highly+Optimized" alt="Typing SVG" />
 
-A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit Scripts. Featuring A Clean Dark Theme, Dynamic Texts, Secure Dialog Modals, Draggable Elements, And An Advanced Key System.
+A Modern, Highly Optimized, And Bug-Free Roblox UI Library Designed For Exploit Scripts. Featuring A Clean Dark Theme, Fully Dynamic Texts, Secure Dialog Modals, Draggable Elements, And An Advanced Key System.
 
 </div>
 
@@ -26,23 +26,20 @@ InconUI:SetFont("rbxassetid://12187365364")
 
 ```
 
-### 🪟 Creating A Window (With Key System, Executor Check & Dynamic Text)
+### 🪟 Creating A Window (With Key System & Executor Check)
 
-Initialize Your Main Hub Interface. You Can Fully Customize The Welcome Text, TopBar Text, Restrict Execution To Specific App Environments, And Enable The Secure Key System.
+Initialize Your Main Hub Interface. The TopBar And Welcome Text Will Automatically Format Based On Your `Name` Property. You Can Also Restrict Execution To Specific App Environments And Enable The Secure Auto-Saving Key System.
 
 ```lua
 local Window = InconUI:CreateWindow({
-    Name = "Incon Premium Hub",
-    WelcomeTitle = "Welcome",
-    WelcomeName = "Incon Premium Hub",
-    TopBarText = "Incon Premium Hub",
+    Name = "MinhZ Hub Test",
     ToggleUIKeybind = "M",
-    Folder = "InconConfigs",
+    Folder = "MinhZConfigs",
     SupportedExecutors = {"Krampus", "Wave", "Delta", "Solara", "Hydrogen", "Arceus", "Codex", "MacSploit"},
     HasKeySystem = true,
     KeySettings = {
-        Title = "Incon Premium Key System",
-        Key = {"BetaIncon123", "AdminKey"},
+        Title = "MinhZ Premium Key System",
+        Key = {"MinhZ123", "AdminKey"},
         Link = "https://discord.gg/yourlink",
         SaveKey = true,
         MaxTime = 86400
@@ -231,14 +228,14 @@ Show Off Your Recent Updates In A Sleek, Expandable Card.
 
 ```lua
 MainTab:CreateUpdateLog({
-    ver = "v18.0.0 (FINAL MASTERPIECE)",
-    date = "17/07/2026",
+    ver = "v19.0.0 (DYNAMIC TEXT REWORK)",
+    date = "18/07/2026",
     expandable = true,
     changes = {
-        {"+", "Fully Dynamic TopBar Toggle String Purged Of Hardcoded Text."},
+        {"+", "TopBar And Welcome Messages Inherently Scale Entirely By 'Name' Key."},
         {"+", "Added Dialog Modal Popup For Secure Interactions."},
         {"+", "Implemented Paragraph Object With Dynamic SetText."},
-        {"~", "M Toggle And Key System Interactions Secured."}
+        {"+", "Introduced 3 Style Labels (Basic, Warning, Information)."}
     }
 })
 
@@ -267,3 +264,6 @@ MainTab:CreateButton({
         InconUI:Destroy()
     end
 })
+```
+
+```
