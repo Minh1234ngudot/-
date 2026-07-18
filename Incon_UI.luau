@@ -116,9 +116,6 @@ function InconUI:CreateWindow(Options)
     pcall(function() BindKey=Enum.KeyCode[ToggleKeyStr] end)
     BindKey=BindKey or Enum.KeyCode.RightControl
     local ConfigFolder=Options.Folder or "InconConfigs"
-    local WelcomeTitle=Options.WelcomeTitle or "Welcome"
-    local WelcomeName=Options.WelcomeName or TitleText
-    local TopBarText=Options.TopBarText or TitleText
     local Window={CurrentPage=nil,Pages={},TabIndex=0,IsUnlocked=not Options.HasKeySystem,IsMinimized=false}
     local ParentUI=nil
     local success,coreGui=pcall(function() return game:GetService("CoreGui") end)
@@ -485,7 +482,7 @@ function InconUI:CreateWindow(Options)
     TopBar.ZIndex=11
     TopBar.Parent=MainBg
     local TopLabel=Instance.new("TextLabel")
-    TopLabel.Text=TopBarText
+    TopLabel.Text=TitleText
     TopLabel.FontFace=InconUI.CurrentFont
     TopLabel.TextSize=12
     TopLabel.TextColor3=Color3.fromRGB(181,181,181)
@@ -589,7 +586,7 @@ function InconUI:CreateWindow(Options)
         local hue=os.clock()%4/4
         local c=Color3.fromHSV(hue,1,1)
         local hex=string.format("#%02X%02X%02X",c.R*255,c.G*255,c.B*255)
-        Title.Text=string.format('%s\n<font color="%s">%s</font>\nto\n%s',WelcomeTitle,hex,LP.Name,WelcomeName)
+        Title.Text=string.format('Welcome\n<font color="%s">%s</font>\nto\n%s',hex,LP.Name,TitleText)
     end)
     table.insert(InconUI.Connections,rlCon)
     local TabContainer=Instance.new("ScrollingFrame")
