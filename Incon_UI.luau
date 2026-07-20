@@ -116,6 +116,7 @@ function InconUI:CreateWindow(Options)
     pcall(function() BindKey=Enum.KeyCode[ToggleKeyStr] end)
     BindKey=BindKey or Enum.KeyCode.RightControl
     local ConfigFolder=Options.Folder or "InconConfigs"
+    local FloatBtnImage=Options.FloatImage or "rbxthumb://type=AvatarHeadShot&id="..LP.UserId.."&w=150&h=150"
     local Window={CurrentPage=nil,Pages={},TabIndex=0,IsUnlocked=not Options.HasKeySystem,IsMinimized=false}
     local ParentUI=nil
     local success,coreGui=pcall(function() return game:GetService("CoreGui") end)
@@ -324,7 +325,7 @@ function InconUI:CreateWindow(Options)
     local FloatBtn=Instance.new("ImageButton")
     FloatBtn.Size=UDim2.new(0,40,0,40)
     FloatBtn.Position=UDim2.new(0.5,-20,0.1,0)
-    FloatBtn.Image="rbxthumb://type=AvatarHeadShot&id="..LP.UserId.."&w=150&h=150"
+    FloatBtn.Image=FloatBtnImage
     FloatBtn.BackgroundColor3=Color3.fromRGB(15,15,15)
     FloatBtn.BorderColor3=Color3.fromRGB(56,56,56)
     FloatBtn.Visible=false
@@ -1158,6 +1159,144 @@ function InconUI:CreateWindow(Options)
                 Content.Text=NewContent or Content.Text
             end
             return ParaObj
+        end
+        function Tab:CreateInfoCard(ElmOptions)
+            local Target=Tab:GetParent(ElmOptions.Locked,ElmOptions.LockedTitle)
+            local CardObj={}
+            local Container=Instance.new("Frame")
+            Container.Size=UDim2.new(1,0,0,70)
+            Container.BackgroundColor3=Color3.fromRGB(20,20,20)
+            Container.BorderColor3=Color3.fromRGB(51,51,51)
+            Container.ZIndex=13
+            Container.Parent=Target
+            Instance.new("UICorner",Container).CornerRadius=UDim.new(0,4)
+            local Icon=Instance.new("ImageLabel")
+            Icon.Size=UDim2.new(0,50,0,50)
+            Icon.Position=UDim2.new(0,10,0.5,-25)
+            Icon.BackgroundColor3=Color3.fromRGB(15,15,15)
+            Icon.BorderSizePixel=0
+            Icon.Image=ElmOptions.Icon or "rbxthumb://type=AvatarHeadShot&id="..LP.UserId.."&w=150&h=150"
+            Icon.ZIndex=14
+            Icon.Parent=Container
+            Instance.new("UICorner",Icon).CornerRadius=UDim.new(1,0)
+            local Title=Instance.new("TextLabel")
+            Title.Size=UDim2.new(1,-80,0,20)
+            Title.Position=UDim2.new(0,70,0,10)
+            Title.BackgroundTransparency=1
+            Title.TextColor3=Color3.fromRGB(255,255,255)
+            Title.TextXAlignment=Enum.TextXAlignment.Left
+            Title.RichText=true
+            Title.FontFace=InconUI.CurrentFont
+            Title.TextSize=13
+            Title.ZIndex=14
+            Title.Parent=Container
+            if ElmOptions.Title then
+                Title.Text=ElmOptions.Title
+            else
+                local crCon=RS.RenderStepped:Connect(function()
+                    if not Title:IsDescendantOf(game) then return end
+                    local hue=os.clock()%4/4
+                    local c=Color3.fromHSV(hue,1,1)
+                    local hex=string.format("#%02X%02X%02X",c.R*255,c.G*255,c.B*255)
+                    Title.Text=string.format("Welcome to %s, <font color=\"%s\">%s</font>!",TitleText,hex,LP.Name)
+                end)
+                table.insert(InconUI.Connections,crCon)
+            end
+            local SubTitle=Instance.new("TextLabel")
+            SubTitle.Size=UDim2.new(1,-80,0,15)
+            SubTitle.Position=UDim2.new(0,70,0,30)
+            SubTitle.BackgroundTransparency=1
+            SubTitle.Text=ElmOptions.SubTitle or "@"..LP.Name
+            SubTitle.TextColor3=Color3.fromRGB(150,150,150)
+            SubTitle.TextXAlignment=Enum.TextXAlignment.Left
+            SubTitle.FontFace=InconUI.CurrentFont
+            SubTitle.TextSize=11
+            SubTitle.ZIndex=14
+            SubTitle.Parent=Container
+            local Desc=Instance.new("TextLabel")
+            Desc.Size=UDim2.new(1,-80,0,15)
+            Desc.Position=UDim2.new(0,70,0,45)
+            Desc.BackgroundTransparency=1
+            Desc.Text=ElmOptions.Description or ""
+            Desc.TextColor3=Color3.fromRGB(120,120,120)
+            Desc.TextXAlignment=Enum.TextXAlignment.Left
+            Desc.FontFace=InconUI.CurrentFont
+            Desc.TextSize=10
+            Desc.ZIndex=14
+            Desc.Parent=Container
+            function CardObj:SetTitle(txt) Title.Text=txt end
+            function CardObj:SetSubTitle(txt) SubTitle.Text=txt end
+            function CardObj:SetDescription(txt) Desc.Text=txt end
+            return CardObj
+        end
+        function Tab:CreateDiscord(ElmOptions)
+            local Target=Tab:GetParent(false)
+            local Container=Instance.new("Frame")
+            Container.Size=UDim2.new(1,0,0,170)
+            Container.BackgroundColor3=Color3.fromRGB(20,20,20)
+            Container.BorderColor3=Color3.fromRGB(51,51,51)
+            Container.ClipsDescendants=true
+            Container.ZIndex=13
+            Container.Parent=Target
+            local Banner=Instance.new("ImageLabel")
+            Banner.Size=UDim2.new(1,0,0,100)
+            Banner.BackgroundColor3=Color3.fromRGB(15,15,15)
+            Banner.BorderSizePixel=0
+            Banner.Image=ElmOptions.Banner or ""
+            Banner.ScaleType=Enum.ScaleType.Crop
+            Banner.ZIndex=14
+            Banner.Parent=Container
+            local Icon=Instance.new("ImageLabel")
+            Icon.Size=UDim2.new(0,45,0,45)
+            Icon.Position=UDim2.new(0,10,0,115)
+            Icon.BackgroundColor3=Color3.fromRGB(15,15,15)
+            Icon.BorderSizePixel=0
+            Icon.Image=ElmOptions.Icon or ""
+            Icon.ZIndex=14
+            Icon.Parent=Container
+            Instance.new("UICorner",Icon).CornerRadius=UDim.new(0,6)
+            local Name=Instance.new("TextLabel")
+            Name.Size=UDim2.new(1,-150,0,20)
+            Name.Position=UDim2.new(0,65,0,112)
+            Name.BackgroundTransparency=1
+            Name.Text=ElmOptions.ServerName or "Discord Server"
+            Name.TextColor3=Color3.fromRGB(255,255,255)
+            Name.TextXAlignment=Enum.TextXAlignment.Left
+            Name.FontFace=InconUI.CurrentFont
+            Name.TextSize=14
+            Name.ZIndex=14
+            Name.Parent=Container
+            local Desc=Instance.new("TextLabel")
+            Desc.Size=UDim2.new(1,-150,0,25)
+            Desc.Position=UDim2.new(0,65,0,135)
+            Desc.BackgroundTransparency=1
+            Desc.Text=ElmOptions.Description or ""
+            Desc.TextColor3=Color3.fromRGB(180,180,180)
+            Desc.TextXAlignment=Enum.TextXAlignment.Left
+            Desc.TextYAlignment=Enum.TextYAlignment.Top
+            Desc.TextWrapped=true
+            Desc.FontFace=InconUI.CurrentFont
+            Desc.TextSize=11
+            Desc.ZIndex=14
+            Desc.Parent=Container
+            local JoinBtn=Instance.new("TextButton")
+            JoinBtn.Size=UDim2.new(0,70,0,30)
+            JoinBtn.AnchorPoint=Vector2.new(1,0)
+            JoinBtn.Position=UDim2.new(1,-10,0,125)
+            JoinBtn.BackgroundColor3=Color3.fromRGB(26,26,26)
+            JoinBtn.BorderColor3=Color3.fromRGB(51,51,51)
+            JoinBtn.TextColor3=Color3.fromRGB(201,201,201)
+            JoinBtn.Text="Join"
+            JoinBtn.FontFace=InconUI.CurrentFont
+            JoinBtn.TextSize=12
+            JoinBtn.ZIndex=14
+            JoinBtn.Parent=Container
+            table.insert(InconUI.Connections,JoinBtn.MouseButton1Click:Connect(function()
+                if setclipboard and ElmOptions.Invite then
+                    setclipboard(ElmOptions.Invite)
+                    InconUI:MakeNotify({Title="Discord",Content="Copied Invite Link!",Time=3})
+                end
+            end))
         end
         function Tab:CreateToggle(ElmOptions)
             local Target=Tab:GetParent(ElmOptions.Locked,ElmOptions.LockedTitle)
