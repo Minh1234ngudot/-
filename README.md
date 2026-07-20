@@ -46,7 +46,7 @@ local Window = InconUI:CreateWindow({
     KeySettings = {
         Title = "MinhZ Premium Key System", -- Title displayed on the key system screen
         Key = {"MinhZ123", "AdminKey"}, -- Accepts a single string or a table of valid keys
-        Link = "https://discord.gg/yourlink", -- The link copied when the user clicks 'Get Key'
+        Link = "https://example.com/getkey", -- The link copied when the user clicks 'Get Key'
         SaveKey = true, -- Automatically saves the valid key to the user's workspace
         MaxTime = 86400 -- Expiration time for the saved key in seconds (86400 = 24 hours)
     }
@@ -76,7 +76,7 @@ local ProfileCard = MainTab:CreateInfoCard({
     -- Automatically grabs the user's actual Roblox display name and makes it pink
     Title = "Welcome to MinhZ Hub, <font color='#ff00ff'>" .. game.Players.LocalPlayer.Name .. "</font>!",
     SubTitle = "@" .. game.Players.LocalPlayer.Name,
-    Description = "Blox Fruits | Third Sea | Join Discord For Support And Update",
+    Description = "Universal Hub | Join Discord For Support And Update",
     -- Automatically grabs the user's Roblox avatar headshot
     Icon = "rbxthumb://type=AvatarHeadShot&id=" .. game.Players.LocalPlayer.UserId .. "&w=150&h=150"
 })
@@ -94,7 +94,7 @@ Create a professional Discord embed card inside the hub complete with a large sc
 MainTab:CreateDiscord({
     ServerName = "🤫 MinhZ Community",
     Description = "Script Free, Fast Update, Fast Support, People Friendly.",
-    Invite = "https://discord.gg/q2DzqWgpTC", -- Link copied when the user clicks 'Join'
+    Invite = "https://discord.gg/YourInviteHere", -- Link copied when the user clicks 'Join'
     Banner = "rbxassetid://123456789", -- The large background image ID
     Icon = "rbxassetid://123456789" -- The small server icon ID
 })
